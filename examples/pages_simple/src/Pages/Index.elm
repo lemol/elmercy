@@ -1,4 +1,4 @@
-module Pages.About exposing (view)
+module Pages.Index exposing (view)
 
 import App.Routes as Routes exposing (toPath)
 import Html exposing (Html, a, div, h1, text)
@@ -11,7 +11,7 @@ view =
         []
         [ h1
             []
-            [ text "About Page" ]
+            [ text "Index Page" ]
         , div
             []
             [ a

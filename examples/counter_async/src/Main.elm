@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg, subscriptions, update, view)
+module Main exposing (Model, Msg, subscriptions, update, view, init)
 
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
@@ -10,9 +10,14 @@ import Time
 
 
 type alias Model =
-    { counter : Int
-    }
+    Int
 
+
+init : ( Model, Cmd Msg )
+init =
+    ( 0
+    , Cmd.none
+    )
 
 
 -- MESSAGES
@@ -31,19 +36,19 @@ update : Msg -> Model -> ( Model, Cmd Msg )
 update msg model =
     case msg of
         Increment ->
-            ( { model | counter = counter + 1 }
+            ( model + 1
             , Cmd.none
             )
 
         Reset ->
-            ( { model | counter = 0 }
+            ( 0
             , Cmd.none
             )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Time.every 1000 Increment
+    Time.every 1000 (always Increment)
 
 
 
@@ -53,8 +58,11 @@ subscriptions model =
 view : Model -> Html Msg
 view model =
     div
-        [ text (String.fromInt model.counter)
+        []
+        [ text (String.fromInt model)
         , button
-            [ onClick Reset ]
-            [ text "reset" ]
+            [ onClick Reset
+            ]
+            [ text "reset"
+            ]
         ]

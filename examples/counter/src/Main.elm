@@ -1,4 +1,4 @@
-module Main exposing (Model, Msg, update, view)
+module Main exposing (Model, Msg, init, update, view)
 
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
@@ -9,8 +9,12 @@ import Html.Events exposing (onClick)
 
 
 type alias Model =
-    { counter : Int
-    }
+    Int
+
+
+init : Model
+init =
+    0
 
 
 
@@ -30,10 +34,10 @@ update : Msg -> Model -> Model
 update msg model =
     case msg of
         Increment ->
-            { model | counter = counter + 1 }
+            model + 1
 
         Decrement ->
-            { model | counter = counter - 1 }
+            model - 1
 
 
 
@@ -43,10 +47,11 @@ update msg model =
 view : Model -> Html Msg
 view model =
     div
+        []
         [ button
             [ onClick Decrement ]
             [ text "-" ]
-        , text (String.fromInt model.counter)
+        , text (String.fromInt model)
         , button
             [ onClick Increment ]
             [ text "+" ]
