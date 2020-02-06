@@ -1,8 +1,8 @@
-module Main exposing (view)
+module Pages.About exposing (view)
 
 
 import Html exposing (Html, text)
 
 view : Html msg
 view =
-    text "Hello world!"
+    text "About page!"

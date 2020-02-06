@@ -1,4 +1,4 @@
-module Main exposing (main)
+module Main exposing (Model, Msg, update, view)
 
 import Html exposing (Html, button, div, text)
 import Html.Events exposing (onClick)
