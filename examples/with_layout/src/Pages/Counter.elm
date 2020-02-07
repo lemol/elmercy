@@ -6,6 +6,7 @@ import Global
 import Html exposing (Html, a, button, div, h1, text)
 import Html.Attributes exposing (href)
 import Html.Events exposing (onClick)
+import Layouts.Main as Layout
 
 
 
@@ -52,47 +53,15 @@ update msg model =
 -- VIEW
 
 
-view : Global.Model -> Model -> Html Msg
-view global model =
-    div
-        []
-        [ h1
+view : Global.Model -> Model -> Layout.Page Msg
+view _ model =
+    { title = "Counter"
+    , headerTitle =
+        h1
             []
             [ text "Counter Page" ]
-        , div
-            []
-            [ case global of
-                Nothing ->
-                    button
-                        [ onClick (Send <| Global.Login "Mercy Tchue") ]
-                        [ text "Login" ]
-
-                Just _ ->
-                    button
-                        [ onClick (Send <| Global.Logout) ]
-                        [ text "Logout for "
-                        , text (Maybe.withDefault "" global)
-                        ]
-            ]
-        , div
-            []
-            [ a
-                [ href (toPath Routes.Index) ]
-                [ text "Index" ]
-            , text " | "
-            , a
-                [ href (toPath Routes.Counter) ]
-                [ text "Counter" ]
-            , text " | "
-            , a
-                [ href (toPath Routes.CounterAsync) ]
-                [ text "Counter Async" ]
-            , text " | "
-            , a
-                [ href (toPath Routes.About) ]
-                [ text "About" ]
-            ]
-        , div
+    , main =
+        div
             []
             [ button
                 [ onClick Decrement ]
@@ -102,4 +71,5 @@ view global model =
                 [ onClick Increment ]
                 [ text "+" ]
             ]
-        ]
+    }
+

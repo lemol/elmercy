@@ -17,11 +17,11 @@ import Pages.Index
 
 
 type alias Model =
-    { index : Maybe ()
+    { mainLayout : Maybe Layouts.Main.Model
+    , index : Maybe ()
     , about : Maybe ()
     , counter : Maybe Pages.Counter.Model
     , counterAsync : Maybe Pages.CounterAsync.Model
-    , mainLayout : Maybe Layouts.Main.Model
     }
 
 
@@ -29,11 +29,11 @@ init : Global.Model -> Routes.Route -> ( Model, Cmd Msg )
 init global route =
     let
         model =
-            { index = Nothing
+            { mainLayout = Nothing
+            , index = Nothing
             , about = Nothing
             , counter = Nothing
             , counterAsync = Nothing
-            , mainLayout = Nothing
             }
     in
     enterRoute global model route
@@ -111,11 +111,12 @@ enterRoute global model route =
 
 
 type Msg
-    = IndexMsg ()
+    = MainLayoutMsg Layouts.Main.Msg
+    | IndexMsg ()
     | AboutMsg ()
     | CounterMsg Pages.Counter.Msg
+    | Counter_LayoutMsg (Utils.LayoutMsg Layouts.Main.Msg Pages.Counter.Msg)
     | CounterAsyncMsg Pages.CounterAsync.Msg
-    | MainLayoutMsg Layouts.Main.Msg
     | CounterAsync_LayoutMsg (Utils.LayoutMsg Layouts.Main.Msg Pages.CounterAsync.Msg)
 
 
@@ -126,6 +127,16 @@ type Msg
 update : Msg -> Global.Model -> Model -> ( Model, Cmd Msg, Cmd Global.Msg )
 update msg global model =
     case msg of
+        MainLayoutMsg subMsg ->
+            let
+                ( pageModel, pageCmd, globalCmd ) =
+                    updateHelper3 Layouts.Main.update subMsg model.mainLayout
+            in
+            ( { model | mainLayout = pageModel }
+            , Cmd.map MainLayoutMsg pageCmd
+            , globalCmd
+            )
+
         IndexMsg _ ->
             ( model, Cmd.none, Cmd.none )
 
@@ -142,6 +153,13 @@ update msg global model =
             , globalCmd
             )
 
+        Counter_LayoutMsg subMsg ->
+            let
+                split =
+                    Utils.splitMsg MainLayoutMsg CounterMsg
+            in
+            update (split subMsg) global model
+
         CounterAsyncMsg subMsg ->
             let
                 ( pageModel, pageCmd, globalCmd ) =
@@ -149,16 +167,6 @@ update msg global model =
             in
             ( { model | counterAsync = pageModel }
             , Cmd.map CounterAsyncMsg pageCmd
-            , globalCmd
-            )
-
-        MainLayoutMsg subMsg ->
-            let
-                ( pageModel, pageCmd, globalCmd ) =
-                    updateHelper3 Layouts.Main.update subMsg model.mainLayout
-            in
-            ( { model | mainLayout = pageModel }
-            , Cmd.map MainLayoutMsg pageCmd
             , globalCmd
             )
 
@@ -211,11 +219,13 @@ view route global model =
                 |> mapDocument (always (AboutMsg ()))
 
         Routes.Counter ->
-            model.counter
-                |> Maybe.map (Pages.Counter.view global)
-                |> Maybe.map (toDocument "")
-                |> Maybe.withDefault viewEmpty
-                |> mapDocument CounterMsg
+            case ( model.counter, model.mainLayout ) of
+                ( Just counter, Just mainLayout ) ->
+                    Layouts.Main.view global mainLayout (Pages.Counter.view global counter)
+                        |> mapDocument Counter_LayoutMsg
+
+                _ ->
+                    viewEmpty
 
         Routes.CounterAsync ->
             case ( model.counterAsync, model.mainLayout ) of
