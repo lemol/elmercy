@@ -1,7 +1,7 @@
 module App.Page exposing (Model, Msg, enterRoute, init, subscriptions, update, view)
 
 import App.Routes as Routes
-import App.Utils exposing (mapDocument)
+import App.Utils as Utils exposing (mapDocument)
 import Browser
 import Global
 import Html exposing (Html, text)
@@ -116,7 +116,7 @@ type Msg
     | CounterMsg Pages.Counter.Msg
     | CounterAsyncMsg Pages.CounterAsync.Msg
     | MainLayoutMsg Layouts.Main.Msg
-    | CounterAsync_LayoutMsg (Layouts.Main.LayoutMsg Pages.CounterAsync.Msg)
+    | CounterAsync_LayoutMsg (Utils.LayoutMsg Layouts.Main.Msg Pages.CounterAsync.Msg)
 
 
 
@@ -165,7 +165,7 @@ update msg global model =
         CounterAsync_LayoutMsg subMsg ->
             let
                 split =
-                    splitMsg MainLayoutMsg CounterAsyncMsg
+                    Utils.splitMsg MainLayoutMsg CounterAsyncMsg
             in
             update (split subMsg) global model
 
@@ -271,13 +271,3 @@ updateHelper3 f msg maybeModel =
             case f msg model of
                 ( x, y, z ) ->
                     ( Just x, y, z )
-
-
-splitMsg : (Layouts.Main.Msg -> msg) -> (a -> msg) -> Layouts.Main.LayoutMsg a -> msg
-splitMsg fromLayoutMsg fromPageMsg msg1 =
-    case msg1 of
-        Layouts.Main.BaseMsg x ->
-            fromLayoutMsg x
-
-        Layouts.Main.PageMsg x ->
-            fromPageMsg x

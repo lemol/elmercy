@@ -1,4 +1,4 @@
-module App.Utils exposing (RoutingType(..), mapDocument, send)
+module App.Utils exposing (RoutingType(..), mapDocument, LayoutMsg(..), send, splitMsg)
 
 import Browser exposing (Document)
 import Html
@@ -33,3 +33,22 @@ mapDocument f { title, body } =
     , body =
         List.map (Html.map f) body
     }
+
+
+
+-- LAYOUT
+
+
+type LayoutMsg baseMsg pageMsg
+    = BaseMsg baseMsg
+    | PageMsg pageMsg
+
+
+splitMsg : (baseMsg -> msg) -> (pageMsg -> msg) -> LayoutMsg baseMsg pageMsg -> msg
+splitMsg fromBaseMsg fromPageMsg layoutMsg =
+    case layoutMsg of
+        BaseMsg x ->
+            fromBaseMsg x
+
+        PageMsg x ->
+            fromPageMsg x

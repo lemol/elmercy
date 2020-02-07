@@ -1,7 +1,7 @@
 module Layouts.Main exposing (..)
 
 import App.Routes as Routes exposing (toPath)
-import App.Utils exposing (send)
+import App.Utils exposing (send, LayoutMsg(..))
 import Browser exposing (Document)
 import Global
 import Html exposing (Html, a, button, div, text)
@@ -47,11 +47,6 @@ init =
 -- MESSAGES
 
 
-type LayoutMsg pageMsg
-    = BaseMsg Msg
-    | PageMsg pageMsg
-
-
 type Msg
     = Send Global.Msg
     | ShuffleColor
@@ -83,7 +78,7 @@ update msg model =
 -- VIEW
 
 
-view : Global.Model -> Model -> Page pageMsg -> Document (LayoutMsg pageMsg)
+view : Global.Model -> Model -> Page pageMsg -> Document (LayoutMsg Msg pageMsg)
 view global model page =
     let
         title =
