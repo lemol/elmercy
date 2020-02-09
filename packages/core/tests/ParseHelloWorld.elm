@@ -1,12 +1,12 @@
-module ParsingHelloWorld exposing (..)
+module ParseHelloWorld exposing (..)
 
 import Data exposing (..)
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
-import Main
+import Expect
+import Parser
 import Test exposing (..)
 
 
+mainFileExposeView : String
 mainFileExposeView =
     """module Main exposing (view)
 
@@ -18,6 +18,7 @@ view =
 """
 
 
+mainFileExposeMain : String
 mainFileExposeMain =
     """module Main exposing (main)
 
@@ -36,26 +37,20 @@ suite =
             \_ ->
                 let
                     result =
-                        Main.parsePage mainFileExposeView
+                        Parser.parseNextSource SimpleHtmlAppType Empty mainFileExposeView
 
                     expected =
-                        { routeName = "Main"
-                        , routePath = "/"
-                        , exposedPage = SimpleHtml "view"
-                        }
+                        SimpleHtml "view"
                 in
                 result |> Expect.equal (Ok expected)
         , test "hello world exposing main : Html msg" <|
             \_ ->
                 let
                     result =
-                        Main.parsePage mainFileExposeMain
+                        Parser.parseNextSource SimpleHtmlAppType Empty mainFileExposeMain
 
                     expected =
-                        { routeName = "Main"
-                        , routePath = "/"
-                        , exposedPage = SimpleHtml "main"
-                        }
+                        SimpleHtml "main"
                 in
                 result |> Expect.equal (Ok expected)
         ]

@@ -1,14 +1,14 @@
 module Parser.SimpleHtml exposing (find)
 
-import Data exposing (..)
+import Data exposing (App(..), AppType(..), Module)
 import Elm.Interface as Interface
 import Elm.Syntax.Declaration as Declaration
-import Elm.Syntax.Expression as Expression
 import Elm.Syntax.Node as Node
 import Elm.Syntax.TypeAnnotation as TypeAnnotation
+import Parser.Utils exposing (functionName, functionType)
 
 
-find : Module -> Maybe ExposedPage
+find : Module -> Maybe App
 find { interface, declarations } =
     let
         checkExposingFunction =
@@ -37,19 +37,6 @@ find { interface, declarations } =
 
     else
         Nothing
-
-
-functionName : Expression.Function -> String
-functionName =
-    .declaration >> Node.value >> .name >> Node.value
-
-
-functionType : Expression.Function -> Maybe TypeAnnotation.TypeAnnotation
-functionType f =
-    f.signature
-        |> Maybe.map Node.value
-        |> Maybe.map .typeAnnotation
-        |> Maybe.map Node.value
 
 
 isHtmlReturnType : TypeAnnotation.TypeAnnotation -> Bool

@@ -1,9 +1,9 @@
 module App.Main exposing (main)
 
-import Html
+import Html exposing (Html)
 import Main
 
 
-main : Html.Html msg
+main : Html msg
 main =
     Main.view

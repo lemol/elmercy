@@ -18,7 +18,7 @@ expectedInterface =
     ]
 
 
-find : Module -> Maybe ExposedPage
+find : Module -> Maybe App
 find { interface, declarations } =
     let
         checkInterface =
@@ -58,49 +58,31 @@ find { interface, declarations } =
         Nothing
 
 
-getInitType : Maybe TypeAnnotation.TypeAnnotation -> Maybe InitType
-getInitType types =
-    let
-        get ta =
-            case ta of
-                TypeAnnotation.Typed (Node _ ( _, "Model" )) [] ->
-                    Just Init1
+getInitType : TypeAnnotation.TypeAnnotation -> Maybe InitType
+getInitType ta =
+    case ta of
+        TypeAnnotation.Typed (Node _ ( _, "Model" )) [] ->
+            Just Init1
 
-                _ ->
-                    Nothing
-    in
-    types
-        |> Maybe.map get
-        |> Maybe.Extra.join
+        _ ->
+            Nothing
 
 
-getViewType : Maybe TypeAnnotation.TypeAnnotation -> Maybe ViewType
-getViewType types =
-    let
-        get ta =
-            case ta of
-                TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])) (Node _ (TypeAnnotation.Typed (Node _ ( _, "Html" )) _)) ->
-                    Just View2
+getViewType : TypeAnnotation.TypeAnnotation -> Maybe ViewType
+getViewType ta =
+    case ta of
+        TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])) (Node _ (TypeAnnotation.Typed (Node _ ( _, "Html" )) _)) ->
+            Just View2
 
-                _ ->
-                    Nothing
-    in
-    types
-        |> Maybe.map get
-        |> Maybe.Extra.join
+        _ ->
+            Nothing
 
 
-getUpdateType : Maybe TypeAnnotation.TypeAnnotation -> Maybe UpdateType
-getUpdateType types =
-    let
-        get ta =
-            case ta of
-                TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Msg" )) [])) (Node _ (TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])) (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])))) ->
-                    Just Update3
+getUpdateType : TypeAnnotation.TypeAnnotation -> Maybe UpdateType
+getUpdateType ta =
+    case ta of
+        TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Msg" )) [])) (Node _ (TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])) (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])))) ->
+            Just Update3
 
-                _ ->
-                    Nothing
-    in
-    types
-        |> Maybe.map get
-        |> Maybe.Extra.join
+        _ ->
+            Nothing

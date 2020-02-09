@@ -5,6 +5,7 @@ import Elm.Syntax.Declaration as Declaration exposing (Declaration)
 import Elm.Syntax.Expression as Expression
 import Elm.Syntax.Node as Node exposing (Node(..))
 import Elm.Syntax.TypeAnnotation as TypeAnnotation
+import Maybe.Extra
 
 
 functionName : Expression.Function -> String
@@ -38,14 +39,14 @@ filterDeclarations names declarations =
         |> List.filter condition
 
 
-checkFunctionType : String -> (Maybe TypeAnnotation.TypeAnnotation -> Maybe a) -> Module -> Maybe a
+checkFunctionType : String -> (TypeAnnotation.TypeAnnotation -> Maybe a) -> Module -> Maybe a
 checkFunctionType name getter { declarations } =
     let
         check declaration =
             case declaration of
                 Declaration.FunctionDeclaration x ->
                     if functionName x == name then
-                        getter (Maybe.map (Node.value >> .typeAnnotation >> Node.value) x.signature)
+                        Maybe.map (Node.value >> .typeAnnotation >> Node.value >> getter) x.signature
 
                     else
                         Nothing
@@ -57,3 +58,12 @@ checkFunctionType name getter { declarations } =
         |> List.map check
         |> List.filterMap identity
         |> List.head
+        |> Maybe.Extra.join
+
+
+functionType : Expression.Function -> Maybe TypeAnnotation.TypeAnnotation
+functionType f =
+    f.signature
+        |> Maybe.map Node.value
+        |> Maybe.map .typeAnnotation
+        |> Maybe.map Node.value

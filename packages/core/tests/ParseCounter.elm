@@ -1,9 +1,8 @@
-module ParsingCounter exposing (..)
+module ParseCounter exposing (..)
 
 import Data exposing (..)
-import Expect exposing (Expectation)
-import Fuzz exposing (Fuzzer, int, list, string)
-import Main
+import Expect
+import Parser
 import Test exposing (..)
 
 
@@ -14,24 +13,21 @@ suite =
             \_ ->
                 let
                     result =
-                        Main.parsePage mainFile
+                        Parser.parseNextSource SinglePageAppType Empty mainFile
 
                     expected =
-                        { routeName = "Main"
-                        , routePath = "/"
-                        , exposedPage =
-                            SinglePage
-                                { initType = Init1
-                                , updateType = Update3
-                                , viewType = View2
-                                , subscriptionType = Subscription0
-                                }
-                        }
+                        SinglePage
+                            { initType = Init1
+                            , updateType = Update3
+                            , viewType = View2
+                            , subscriptionType = Subscription0
+                            }
                 in
                 result |> Expect.equal (Ok expected)
         ]
 
 
+mainFile : String
 mainFile =
     """
 module Main exposing (Model, Msg, init, update, view)

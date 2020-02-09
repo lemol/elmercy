@@ -4,22 +4,24 @@ import Elm.Interface exposing (Interface)
 import Elm.Syntax.Declaration exposing (Declaration)
 
 
-type ExposedPage
-    = None
+type AppType
+    = Unknown
+    | SimpleHtmlAppType
+    | SinglePageAppType
+    | MulitplePagesAppType
+
+
+type App
+    = Empty
     | SimpleHtml String
     | SinglePage PageOptions
+    | MulitplePages (List AppPage)
 
 
 type alias AppPage =
     { routeName : String
     , routePath : String
-    , exposedPage : ExposedPage
-    }
-
-
-type alias Module =
-    { interface : Interface
-    , declarations : List Declaration
+    , options : PageOptions
     }
 
 
@@ -28,6 +30,12 @@ type alias PageOptions =
     , updateType : UpdateType
     , viewType : ViewType
     , subscriptionType : SubscriptionType
+    }
+
+
+type alias Module =
+    { interface : Interface
+    , declarations : List Declaration
     }
 
 
