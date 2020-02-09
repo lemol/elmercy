@@ -5,7 +5,6 @@ import Elm.Syntax.Declaration as Declaration exposing (Declaration)
 import Elm.Syntax.Expression as Expression
 import Elm.Syntax.Node as Node exposing (Node(..))
 import Elm.Syntax.TypeAnnotation as TypeAnnotation
-import Maybe.Extra
 
 
 functionName : Expression.Function -> String
@@ -39,8 +38,8 @@ filterDeclarations names declarations =
         |> List.filter condition
 
 
-checkFunctionType : String -> (TypeAnnotation.TypeAnnotation -> Maybe a) -> Module -> Maybe a
-checkFunctionType name getter { declarations } =
+checkFunctionType : String -> (TypeAnnotation.TypeAnnotation -> Maybe a) -> Module -> Maybe a -> Maybe a
+checkFunctionType name getter { declarations } default =
     let
         check declaration =
             case declaration of
@@ -58,7 +57,7 @@ checkFunctionType name getter { declarations } =
         |> List.map check
         |> List.filterMap identity
         |> List.head
-        |> Maybe.Extra.join
+        |> Maybe.withDefault default
 
 
 functionType : Expression.Function -> Maybe TypeAnnotation.TypeAnnotation

@@ -1,14 +1,14 @@
 module App.Main exposing (main)
 
 import Browser
-import Main
+import Main exposing (Model, Msg, init, update, view, subscriptions)
 
 
-main : Program () Main.Model Main.Msg
+main : Program () Model Msg
 main =
-    Browser.element
-        { init = always Main.init
-        , view = Main.view
-        , update = Main.update
-        , subscriptions = Main.subscriptions
+    Browser.sandbox
+        { init = init
+        , view = view
+        , update = update
+        , subscriptions = subscriptions
         }
