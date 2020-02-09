@@ -1,4 +1,4 @@
-module Parsing.SimpleHtml exposing (find)
+module Parser.SimpleHtml exposing (find)
 
 import Data exposing (..)
 import Elm.Interface as Interface

@@ -1,4 +1,4 @@
-module Parsing.Utils exposing (..)
+module Parser.Utils exposing (..)
 
 import Data exposing (..)
 import Elm.Syntax.Declaration as Declaration exposing (Declaration)

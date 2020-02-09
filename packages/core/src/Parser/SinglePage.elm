@@ -1,12 +1,11 @@
-module Parsing.SinglePage exposing (find)
+module Parser.SinglePage exposing (find)
 
 import Data exposing (..)
 import Elm.Interface as Interface
-import Elm.Syntax.Declaration as Declaration exposing (Declaration)
-import Elm.Syntax.Node as Node exposing (Node(..))
+import Elm.Syntax.Node exposing (Node(..))
 import Elm.Syntax.TypeAnnotation as TypeAnnotation
 import Maybe.Extra
-import Parsing.Utils exposing (..)
+import Parser.Utils exposing (..)
 
 
 expectedInterface : List String

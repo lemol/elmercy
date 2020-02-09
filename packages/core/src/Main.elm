@@ -2,17 +2,17 @@ module Main exposing (..)
 
 import Data exposing (..)
 import Elm.Interface as Interface
-import Elm.Parser as Parser
+import Elm.Parser
 import Elm.Processing as Processing
 import Elm.RawFile as RawFile
 import Elm.Syntax.Node as Node
-import Parsing.SimpleHtml as SimpleHtml
-import Parsing.SinglePage as SinglePage
+import Parser.SimpleHtml as SimpleHtml
+import Parser.SinglePage as SinglePage
 
 
 parsePage : String -> Result String AppPage
 parsePage sourceCode =
-    Parser.parse sourceCode
+    Elm.Parser.parse sourceCode
         |> Result.map emitAppPage
         |> Result.mapError (always "ERROR")
 
