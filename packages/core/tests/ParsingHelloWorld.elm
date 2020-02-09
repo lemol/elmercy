@@ -1,5 +1,6 @@
-module Parsing exposing (..)
+module ParsingHelloWorld exposing (..)
 
+import Data exposing (..)
 import Expect exposing (Expectation)
 import Fuzz exposing (Fuzzer, int, list, string)
 import Main
@@ -40,7 +41,7 @@ suite =
                     expected =
                         { routeName = "Main"
                         , routePath = "/"
-                        , exposedPage = Main.SimpleHtml "view"
+                        , exposedPage = SimpleHtml "view"
                         }
                 in
                 result |> Expect.equal (Ok expected)
@@ -53,7 +54,7 @@ suite =
                     expected =
                         { routeName = "Main"
                         , routePath = "/"
-                        , exposedPage = Main.SimpleHtml "main"
+                        , exposedPage = SimpleHtml "main"
                         }
                 in
                 result |> Expect.equal (Ok expected)
