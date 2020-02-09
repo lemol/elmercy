@@ -3,10 +3,10 @@ module Parsing.SinglePage exposing (find)
 import Data exposing (..)
 import Elm.Interface as Interface
 import Elm.Syntax.Declaration as Declaration exposing (Declaration)
-import Elm.Syntax.Expression as Expression
 import Elm.Syntax.Node as Node exposing (Node(..))
 import Elm.Syntax.TypeAnnotation as TypeAnnotation
 import Maybe.Extra
+import Parsing.Utils exposing (..)
 
 
 expectedInterface : List String
@@ -20,30 +20,28 @@ expectedInterface =
 
 
 find : Module -> Maybe ExposedPage
-find ({ interface } as mod_) =
+find { interface, declarations } =
     let
         checkInterface =
             expectedInterface
                 |> List.any (\f -> Interface.exposesFunction f interface)
 
         mod =
-            { declarations = filterDeclarations mod_
+            { declarations = filterDeclarations expectedInterface declarations
             , interface = interface
             }
 
         build =
             Just
-                (\initType ->
-                    \viewType ->
-                        \updateType ->
-                            { initType = initType
-                            , viewType = viewType
-                            , updateType = updateType
-                            }
+                (\initType viewType updateType ->
+                    { initType = initType
+                    , viewType = viewType
+                    , updateType = updateType
+                    }
                 )
-                |> Maybe.Extra.andMap (checkInitType mod)
-                |> Maybe.Extra.andMap (checkViewType mod)
-                |> Maybe.Extra.andMap (checkUpdateType mod)
+                |> Maybe.Extra.andMap (checkFunctionType "init" getInitType mod)
+                |> Maybe.Extra.andMap (checkFunctionType "view" getViewType mod)
+                |> Maybe.Extra.andMap (checkFunctionType "update" getUpdateType mod)
     in
     if checkInterface then
         build
@@ -59,53 +57,6 @@ find ({ interface } as mod_) =
 
     else
         Nothing
-
-
-filterDeclarations : Module -> List Declaration
-filterDeclarations { declarations } =
-    let
-        condition declaration =
-            expectedInterface |> List.member (declarationName declaration)
-    in
-    declarations
-        |> List.filter condition
-
-
-declarationName : Declaration -> String
-declarationName declaration =
-    case declaration of
-        Declaration.FunctionDeclaration x ->
-            functionName x
-
-        Declaration.AliasDeclaration x ->
-            Node.value x.name
-
-        Declaration.CustomTypeDeclaration x ->
-            Node.value x.name
-
-        _ ->
-            "<not implemented>"
-
-
-checkInitType : Module -> Maybe InitType
-checkInitType { declarations } =
-    let
-        check declaration =
-            case declaration of
-                Declaration.FunctionDeclaration x ->
-                    if functionName x == "init" then
-                        getInitType (Maybe.map (Node.value >> .typeAnnotation >> Node.value) x.signature)
-
-                    else
-                        Nothing
-
-                _ ->
-                    Nothing
-    in
-    declarations
-        |> List.map check
-        |> List.filterMap identity
-        |> List.head
 
 
 getInitType : Maybe TypeAnnotation.TypeAnnotation -> Maybe InitType
@@ -124,27 +75,6 @@ getInitType types =
         |> Maybe.Extra.join
 
 
-checkViewType : Module -> Maybe ViewType
-checkViewType { declarations } =
-    let
-        check declaration =
-            case declaration of
-                Declaration.FunctionDeclaration x ->
-                    if functionName x == "view" then
-                        getViewType (Maybe.map (Node.value >> .typeAnnotation >> Node.value) x.signature)
-
-                    else
-                        Nothing
-
-                _ ->
-                    Nothing
-    in
-    declarations
-        |> List.map check
-        |> List.filterMap identity
-        |> List.head
-
-
 getViewType : Maybe TypeAnnotation.TypeAnnotation -> Maybe ViewType
 getViewType types =
     let
@@ -161,27 +91,6 @@ getViewType types =
         |> Maybe.Extra.join
 
 
-checkUpdateType : Module -> Maybe UpdateType
-checkUpdateType { declarations } =
-    let
-        check declaration =
-            case declaration of
-                Declaration.FunctionDeclaration x ->
-                    if functionName x == "update" then
-                        getUpdateType (Maybe.map (Node.value >> .typeAnnotation >> Node.value) x.signature)
-
-                    else
-                        Nothing
-
-                _ ->
-                    Nothing
-    in
-    declarations
-        |> List.map check
-        |> List.filterMap identity
-        |> List.head
-
-
 getUpdateType : Maybe TypeAnnotation.TypeAnnotation -> Maybe UpdateType
 getUpdateType types =
     let
@@ -196,29 +105,3 @@ getUpdateType types =
     types
         |> Maybe.map get
         |> Maybe.Extra.join
-
-
-functionName : Expression.Function -> String
-functionName =
-    .declaration >> Node.value >> .name >> Node.value
-
-
-functionType : Expression.Function -> Maybe TypeAnnotation.TypeAnnotation
-functionType f =
-    f.signature
-        |> Maybe.map Node.value
-        |> Maybe.map .typeAnnotation
-        |> Maybe.map Node.value
-
-
-isHtmlReturnType : TypeAnnotation.TypeAnnotation -> Bool
-isHtmlReturnType t =
-    case t of
-        TypeAnnotation.Typed (Node _ ( _, "Html" )) _ ->
-            True
-
-        TypeAnnotation.FunctionTypeAnnotation _ (Node _ x) ->
-            isHtmlReturnType x
-
-        _ ->
-            False
