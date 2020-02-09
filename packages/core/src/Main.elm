@@ -1,16 +1,13 @@
 module Main exposing (..)
 
-import Dict
-import Elm.AST.Typed as Typed
-import Elm.AST.Typed.Unwrapped as TypedU
-import Elm.Compiler
-import Elm.Compiler.Error exposing (Error)
-import Elm.Data.Declaration as Declaration exposing (Declaration)
-import Elm.Data.Exposing as Exposing
-import Elm.Data.FileContents exposing (FileContents)
-import Elm.Data.FilePath exposing (FilePath)
-import Elm.Data.Module as Module exposing (Module)
-import Elm.Data.Type as Type
+import Elm.Interface as Interface exposing (Interface)
+import Elm.Parser as Parser
+import Elm.Processing as Processing
+import Elm.RawFile as RawFile
+import Elm.Syntax.Declaration as Declaration exposing (Declaration)
+import Elm.Syntax.Expression as Expression exposing (Expression)
+import Elm.Syntax.Node as Node exposing (Node)
+import Elm.Syntax.TypeAnnotation as TypeAnnotation
 
 
 type ExposedPage
@@ -18,74 +15,43 @@ type ExposedPage
     | SimpleHtml String
 
 
-type alias AppModule =
+type alias AppPage =
     { routeName : String
     , routePath : String
     , exposedPage : ExposedPage
     }
 
 
-type alias ModuleArgs =
-    { filePath : String
-    , sourceCode : String
-    }
+parsePage : String -> Result String AppPage
+parsePage sourceCode =
+    Parser.parse sourceCode
+        |> Result.map emitAppPage
+        |> Result.mapError (always "ERROR")
 
 
-parsePage : ModuleArgs -> Result String AppModule
-parsePage args =
+emitAppPage : RawFile.RawFile -> AppPage
+emitAppPage file_ =
     let
         file =
-            { filePath = args.filePath
-            , sourceCode = args.sourceCode
-            }
-    in
-    file
-        |> Elm.Compiler.parseModule
-        |> Result.andThen Elm.Compiler.desugarOnlyModule
-        |> Result.andThen Elm.Compiler.inferModule
-        |> Result.map Elm.Compiler.optimizeModule
-        |> Result.map (Module.map Typed.unwrap)
-        |> Result.map (emitAppModule args)
-        |> Result.mapError Elm.Compiler.Error.toString
+            file_
+                |> Processing.process Processing.init
 
+        moduleName =
+            RawFile.moduleName file_
+                |> String.concat
 
-parseProject : List ModuleArgs -> Result String (List AppModule)
-parseProject args =
-    let
-        project =
-            args
-                |> List.map
-                    (\x ->
-                        { filePath = x.filePath
-                        , sourceCode = x.sourceCode
-                        }
-                    )
-    in
-    project
-        |> Elm.Compiler.parseModules
-        |> Result.andThen Elm.Compiler.desugarModules
-        |> Result.andThen Elm.Compiler.inferModules
-        |> Result.map Elm.Compiler.optimizeModules
-        |> Result.map (Dict.filter (\k _ -> k == "Main"))
-        |> Result.map Dict.values
-        |> Result.map (List.map <| Module.map Typed.unwrap)
-        |> Result.map (List.map <| emitAppModule { filePath = "", sourceCode = "" })
-        |> Result.mapError Elm.Compiler.Error.toString
+        routeName =
+            moduleName
 
+        routePath =
+            if String.startsWith "Pages." moduleName then
+                moduleName |> String.dropLeft 6
 
-emitAppModule : ModuleArgs -> Module TypedU.Expr -> AppModule
-emitAppModule args m =
-    let
-        ( routeName, routePath ) =
-            buildRoute args m
+            else
+                "/"
 
         exposedPage =
-            case m.exposing_ of
-                Exposing.ExposingAll ->
-                    None
-
-                Exposing.ExposingSome items ->
-                    findValidExposing items m
+            findValidExposing (file.declarations |> List.map Node.value) (Interface.build file_)
     in
     { routeName = routeName
     , routePath = routePath
@@ -93,59 +59,67 @@ emitAppModule args m =
     }
 
 
-findValidExposing : List Exposing.ExposedItem -> Module TypedU.Expr -> ExposedPage
-findValidExposing items m =
-    [ findSimpleHtml items m
+findValidExposing : List Declaration -> Interface -> ExposedPage
+findValidExposing items interface =
+    [ findSimpleHtml items interface
     ]
         |> List.filterMap identity
         |> List.head
         |> Maybe.withDefault None
 
 
-findSimpleHtml : List Exposing.ExposedItem -> Module TypedU.Expr -> Maybe ExposedPage
-findSimpleHtml items m =
+findSimpleHtml : List Declaration -> Interface -> Maybe ExposedPage
+findSimpleHtml items interface =
     let
+        checkExposingFunction =
+            [ "view"
+            , "main"
+            ]
+                |> List.any (\f -> Interface.exposesFunction f interface)
+
         checkViewFunction item =
-            if item == Exposing.ExposedValue "view" then
-                Dict.toList m.declarations
-                    |> List.map Tuple.second
-                    |> List.map .body
-                    |> List.map
-                        (\x ->
-                            case x of
-                                Declaration.Value ( _, Type.UserDefinedType k _ ) ->
-                                    k.name
+            case item of
+                Declaration.FunctionDeclaration f ->
+                    if ([ "view", "main" ] |> List.member (functionName f)) && (functionType >> Maybe.map isHtmlReturnType >> Maybe.withDefault False) f then
+                        Just (SimpleHtml <| functionName f)
 
-                                _ ->
-                                    "NONE"
-                        )
-                    |> String.concat
-                    |> SimpleHtml
-                    |> Just
+                    else
+                        Nothing
 
-            else
-                Nothing
+                _ ->
+                    Nothing
     in
-    items
-        |> List.map checkViewFunction
-        |> List.filterMap identity
-        |> List.head
+    if checkExposingFunction then
+        items
+            |> List.map checkViewFunction
+            |> List.filterMap identity
+            |> List.head
+
+    else
+        Nothing
 
 
-buildRoute : ModuleArgs -> Module TypedU.Expr -> ( String, String )
-buildRoute _ m =
-    let
-        routeName =
-            m.name
+functionName : Expression.Function -> String
+functionName =
+    .declaration >> Node.value >> .name >> Node.value
 
-        routePath =
-            if String.startsWith "Pages." m.name then
-                m.name
-                    |> String.dropLeft 6
 
-            else
-                "/"
-    in
-    ( routeName
-    , routePath
-    )
+functionType : Expression.Function -> Maybe TypeAnnotation.TypeAnnotation
+functionType f =
+    f.signature
+        |> Maybe.map Node.value
+        |> Maybe.map .typeAnnotation
+        |> Maybe.map Node.value
+
+
+isHtmlReturnType : TypeAnnotation.TypeAnnotation -> Bool
+isHtmlReturnType t =
+    case t of
+        TypeAnnotation.Typed (Node.Node _ ( _, "Html" )) _ ->
+            True
+
+        TypeAnnotation.FunctionTypeAnnotation _ x ->
+            isHtmlReturnType t
+
+        _ ->
+            False
