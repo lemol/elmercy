@@ -108,4 +108,5 @@ public
 dist
 
 src/Main/index.js
-src/Native/elm-framework.js
+src/Native/index.js
+src/Native/cli.js

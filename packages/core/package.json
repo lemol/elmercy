@@ -25,6 +25,7 @@
     "glob": "^7.1.6",
     "meow": "^6.0.0"
   },
+  "main": "src/Native/index.js",
   "bin": {
     "elm-framework": "bin/elm-framework"
   }

@@ -1,0 +1,12 @@
+{
+  "name": "parcel-plugin-elm-framework",
+  "version": "0.0.1",
+  "description": "Parcel plugin for elm-framework",
+  "main": "src/index.js",
+  "author": "lemol",
+  "license": "MIT",
+  "dependencies": {
+    "elm-framework": "file:../core",
+    "parcel-bundler": "^1.12.4"
+  }
+}
