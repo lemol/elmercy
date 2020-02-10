@@ -3,27 +3,22 @@ import * as fs from "fs";
 import * as glob from "glob";
 import * as path from "path";
 import chalk from "chalk";
+import chokidar from "chokidar";
 
-export function buildApp(projectPath: string) {
+export type Options = {
+  projectPath: string;
+  watch: boolean;
+  outputDir?: string;
+};
+
+const watchFiles = ["Index.elm", "Main.elm", "Pages/**/*.elm"];
+
+export function buildApp({ projectPath, watch, outputDir }: Options) {
   const program = Elm.Main.init({ flags: null });
 
-  const root = `${projectPath}/src`;
-  const distRoot = `${projectPath}/elm-stuff/app-stuff`;
-
-  program.ports.requestSourcePaths.subscribe(async () => {
-    const files = glob
-      .sync(`/**/*.elm`, {
-        sync: true,
-        ignore: [`/App/**`, "**/elm-stuff/**/*"],
-        root
-      })
-      .map(x => path.relative(root, x));
-
-    console.log(`${chalk.underline.bgBlue("Read files:")}`);
-    console.log(`${files.join("\n")}`);
-
-    program.ports.readSourcePaths.send(files);
-  });
+  const root = path.join(projectPath, "src");
+  const distRoot = outputDir || path.join(root, "App");
+  const distRelative = path.relative(root, distRoot);
 
   program.ports.requestSourceCode.subscribe(async filePath => {
     const contents = fs.readFileSync(path.join(root, filePath)).toString();
@@ -43,6 +38,39 @@ export function buildApp(projectPath: string) {
       console.log(`${filePath}`);
     });
   });
+
+  if (watch) {
+    console.log(`${chalk.bgGreenBright("watching...")}`);
+
+    chokidar
+      .watch(watchFiles, {
+        ignoreInitial: true,
+        cwd: root
+      })
+      .on("all", filePath => {
+        console.log(`File ${filePath} changed.`);
+        getSourcePaths();
+      });
+  }
+
+  getSourcePaths();
+
+  function getSourcePaths() {
+    const pattern = `{${watchFiles.map(x => "/" + x).join(",")}}`;
+
+    const files = glob
+      .sync(pattern, {
+        sync: true,
+        ignore: [`/${distRelative}/**`],
+        root
+      })
+      .map(x => path.relative(root, x));
+
+    console.log(`${chalk.underline.bgBlue("Read files:")}`);
+    console.log(`${files.join("\n")}`);
+
+    program.ports.readSourcePaths.send(files);
+  }
 }
 
 function ensureDirExists(filePath: string) {

@@ -7,13 +7,15 @@ const version = require("../../package.json")["version"];
 const cli = meow(
   `
 	Usage
-	  $ foo [project path] [options]
+	  $ elm-framework [project path] [options]
 
 	Options
-    --version, -v               show the version
+    --version, -v                       show the version
+    --output-dir DIR,  -o               output directory
+    --watch, w                          watch for files change
 
 	Examples
-	  $ foo --version
+	  $ elm-framework --version
 	  ${version}
 `,
   {
@@ -21,11 +23,23 @@ const cli = meow(
       version: {
         type: "boolean",
         alias: "v"
+      },
+      "output-dir": {
+        type: "string",
+        alias: "o"
+      },
+      watch: {
+        type: "boolean",
+        alias: "w"
       }
     }
   }
 );
 
+const watch = cli.flags.watch;
 const projectPath = path.relative(process.cwd(), cli.input[0] || ".");
+const outputDir =
+  cli.flags["output-dir"] &&
+  path.relative(process.cwd(), cli.flags["output-dir"]);
 
-buildApp(projectPath);
+buildApp({ projectPath, outputDir, watch });

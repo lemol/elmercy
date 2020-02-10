@@ -8,11 +8,11 @@ import Writer.SinglePage as SinglePage
 getResult : App -> List ( String, String )
 getResult app =
     case app of
-        SimpleHtml x ->
-            [ ( "App/Main.elm", SimpleHtml.write x ) ]
+        SimpleHtml moduleName functionName ->
+            [ ( "Main.elm", SimpleHtml.write moduleName functionName ) ]
 
         SinglePage x ->
-            [ ( "App/Main.elm", SinglePage.write x ) ]
+            [ ( "Main.elm", SinglePage.write x ) ]
 
         _ ->
             []

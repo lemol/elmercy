@@ -40,7 +40,7 @@ suite =
                         Parser.parseNextSource SimpleHtmlAppType Empty mainFileExposeView
 
                     expected =
-                        SimpleHtml "view"
+                        SimpleHtml "Main" "view"
                 in
                 result |> Expect.equal (Ok expected)
         , test "hello world exposing main : Html msg" <|
@@ -50,7 +50,7 @@ suite =
                         Parser.parseNextSource SimpleHtmlAppType Empty mainFileExposeMain
 
                     expected =
-                        SimpleHtml "main"
+                        SimpleHtml "Main" "main"
                 in
                 result |> Expect.equal (Ok expected)
         ]

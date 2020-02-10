@@ -24,21 +24,22 @@ completeInterface =
 
 
 find : Module -> Maybe App
-find { interface, declarations } =
+find ({ interface, declarations, name } as mod_) =
     let
         checkInterface =
             expectedInterface
                 |> List.any (\f -> Interface.exposesFunction f interface)
 
         mod =
-            { declarations = filterDeclarations completeInterface declarations
-            , interface = interface
+            { mod_
+                | declarations = filterDeclarations completeInterface declarations
             }
 
         build =
             Just
                 (\initType viewType updateType subscriptionType ->
-                    { initType = initType
+                    { moduleName = name
+                    , initType = initType
                     , viewType = viewType
                     , updateType = updateType
                     , subscriptionType = subscriptionType

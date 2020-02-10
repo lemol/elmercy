@@ -38,7 +38,10 @@ emitSiglePageApp file_ =
                 |> Processing.process Processing.init
 
         mod =
-            { declarations = file.declarations |> List.map Node.value
+            { name =
+                RawFile.moduleName file_
+                    |> String.join "."
+            , declarations = file.declarations |> List.map Node.value
             , interface = Interface.build file_
             }
     in

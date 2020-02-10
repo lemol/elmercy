@@ -9,7 +9,7 @@ import Parser.Utils exposing (functionName, functionType)
 
 
 find : Module -> Maybe App
-find { interface, declarations } =
+find { interface, declarations, name } =
     let
         checkExposingFunction =
             [ "view"
@@ -21,7 +21,7 @@ find { interface, declarations } =
             case item of
                 Declaration.FunctionDeclaration f ->
                     if ([ "view", "main" ] |> List.member (functionName f)) && (functionType >> Maybe.map isHtmlReturnType >> Maybe.withDefault False) f then
-                        Just (SimpleHtml <| functionName f)
+                        Just (SimpleHtml name <| functionName f)
 
                     else
                         Nothing

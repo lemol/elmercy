@@ -37,7 +37,7 @@ init =
       , appType = Unknown
       , pendingFiles = []
       }
-    , requestSourcePaths ()
+    , Cmd.none
     )
 
 
@@ -65,6 +65,7 @@ update msg model =
             in
             ( { model
                 | appType = appType
+                , app = Empty
                 , pendingFiles = pendingFiles
               }
             , cmd
@@ -140,9 +141,6 @@ subscriptions _ =
 
 
 -- PORTS
-
-
-port requestSourcePaths : () -> Cmd msg
 
 
 port requestSourceCode : String -> Cmd msg

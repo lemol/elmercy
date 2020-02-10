@@ -1,10 +1,10 @@
 module App.Main exposing (main)
 
 import Browser
-import Main exposing (Model, init, update, view)
+import Main exposing (Model, Msg, init, update, view)
 
 
-main : Program () Model Main.Msg
+main : Program () Model Msg
 main =
     Browser.sandbox
         { init = init

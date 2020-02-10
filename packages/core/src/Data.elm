@@ -13,7 +13,7 @@ type AppType
 
 type App
     = Empty
-    | SimpleHtml String
+    | SimpleHtml String String
     | SinglePage PageOptions
     | MulitplePages (List AppPage)
 
@@ -26,7 +26,8 @@ type alias AppPage =
 
 
 type alias PageOptions =
-    { initType : InitType
+    { moduleName : String
+    , initType : InitType
     , updateType : UpdateType
     , viewType : ViewType
     , subscriptionType : SubscriptionType
@@ -34,7 +35,8 @@ type alias PageOptions =
 
 
 type alias Module =
-    { interface : Interface
+    { name : String
+    , interface : Interface
     , declarations : List Declaration
     }
 

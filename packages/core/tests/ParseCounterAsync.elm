@@ -17,7 +17,8 @@ suite =
 
                     expected =
                         SinglePage
-                            { initType = Init2
+                            { moduleName = "Main"
+                            , initType = Init2
                             , updateType = Update4
                             , viewType = View2
                             , subscriptionType = Subscription2

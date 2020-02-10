@@ -4,7 +4,7 @@ import Data exposing (PageOptions, SubscriptionType(..))
 
 
 write : PageOptions -> String
-write { subscriptionType } =
+write { moduleName, subscriptionType } =
     let
         x =
             case subscriptionType of
@@ -15,6 +15,7 @@ write { subscriptionType } =
                     { browserFunction = "element", subscriptionsImprot = ", subscriptions", subscriptionsField = "\n        , subscriptions = subscriptions", viewFunction = "view", initFunction = "always init" }
     in
     template
+        |> String.replace "{MODULE_NAME}" moduleName
         |> String.replace "{SUBSCRIPTIONS_IMPORT}" x.subscriptionsImprot
         |> String.replace "{SUBSCRIPTIONS_FIELD}" x.subscriptionsField
         |> String.replace "{BROWSER_FUNCTION}" x.browserFunction
@@ -27,7 +28,7 @@ template =
     """module App.Main exposing (main)
 
 import Browser
-import Main exposing (Model, Msg, init, update, view{SUBSCRIPTIONS_IMPORT})
+import {MODULE_NAME} exposing (Model, Msg, init, update, view{SUBSCRIPTIONS_IMPORT})
 
 
 main : Program () Model Msg

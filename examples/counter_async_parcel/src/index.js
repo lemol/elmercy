@@ -1,5 +1,5 @@
-import { Elm } from './App/Main.elm'
+import { Elm } from "./App/Main.elm";
 
 Elm.App.Main.init({
-  node: document.querySelector('main')
-})
+  node: document.querySelector("main")
+});
