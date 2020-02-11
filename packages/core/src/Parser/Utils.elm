@@ -5,6 +5,7 @@ import Elm.Syntax.Declaration as Declaration exposing (Declaration)
 import Elm.Syntax.Expression as Expression
 import Elm.Syntax.Node as Node exposing (Node(..))
 import Elm.Syntax.TypeAnnotation as TypeAnnotation
+import Maybe.Extra
 
 
 functionName : Expression.Function -> String
@@ -38,26 +39,22 @@ filterDeclarations names declarations =
         |> List.filter condition
 
 
-checkFunctionType : String -> (TypeAnnotation.TypeAnnotation -> Maybe a) -> Module -> Maybe a -> Maybe a
+checkFunctionType : String -> (TypeAnnotation.TypeAnnotation -> Maybe a) -> Module -> a -> Maybe a
 checkFunctionType name getter { declarations } default =
     let
-        check declaration =
-            case declaration of
-                Declaration.FunctionDeclaration x ->
-                    if functionName x == name then
-                        Maybe.map (Node.value >> .typeAnnotation >> Node.value >> getter) x.signature
-
-                    else
-                        Nothing
-
-                _ ->
-                    Nothing
+        functionFound =
+            declarations
+                |> filterFunctions
+                |> List.filter (Tuple.first >> (==) name)
+                |> List.head
+                |> Maybe.map Tuple.second
     in
-    declarations
-        |> List.map check
-        |> List.filterMap identity
-        |> List.head
-        |> Maybe.withDefault default
+    case functionFound of
+        Just function ->
+            getter function
+
+        Nothing ->
+            Just default
 
 
 functionType : Expression.Function -> Maybe TypeAnnotation.TypeAnnotation
@@ -66,3 +63,20 @@ functionType f =
         |> Maybe.map Node.value
         |> Maybe.map .typeAnnotation
         |> Maybe.map Node.value
+
+
+filterFunctions : List Declaration -> List ( String, TypeAnnotation.TypeAnnotation )
+filterFunctions =
+    let
+        filter declaration =
+            case declaration of
+                Declaration.FunctionDeclaration f ->
+                    f.signature
+                        |> Maybe.map (Tuple.pair (functionName f))
+                        |> Maybe.map (Tuple.mapSecond (Node.value >> .typeAnnotation >> Node.value))
+
+                _ ->
+                    Nothing
+    in
+    List.map filter
+        >> List.filterMap identity

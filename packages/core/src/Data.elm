@@ -54,7 +54,8 @@ type UpdateType
 
 
 type ViewType
-    = View1 -- view : Html msg
+    = View0 -- no view
+    | View1 -- view : Html msg
     | View2 -- view : Model -> Html Msg
 
 

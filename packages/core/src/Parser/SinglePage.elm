@@ -36,69 +36,64 @@ find ({ interface, declarations, name } as mod_) =
             }
 
         build =
-            Just
-                (\initType viewType updateType subscriptionType ->
-                    { moduleName = name
-                    , initType = initType
-                    , viewType = viewType
-                    , updateType = updateType
-                    , subscriptionType = subscriptionType
-                    }
-                )
-                |> Maybe.Extra.andMap (checkFunctionType "init" getInitType mod Nothing)
-                |> Maybe.Extra.andMap (checkFunctionType "view" getViewType mod Nothing)
-                |> Maybe.Extra.andMap (checkFunctionType "update" getUpdateType mod Nothing)
-                |> Maybe.Extra.andMap (checkFunctionType "subscriptions" getSubscriptionType mod (Just Subscription0))
+            { moduleName = name
+            , initType = checkFunctionType "init" getInitType mod Init0
+            , viewType = checkFunctionType "view" getViewType mod View0
+            , updateType = checkFunctionType "update" getUpdateType mod Update0
+            , subscriptionType = checkFunctionType "subscriptions" getSubscriptionType mod Subscription0
+            }
     in
     if checkInterface then
-        build
-            |> Maybe.map SinglePage
+        build |> Maybe.map SinglePage
 
     else
         Nothing
 
 
-getInitType : TypeAnnotation.TypeAnnotation -> Maybe InitType
+getInitType : TypeAnnotation.TypeAnnotation -> InitType
 getInitType ta =
     case ta of
         TypeAnnotation.Typed (Node _ ( _, "Model" )) [] ->
-            Just Init1
+            Init1
 
         TypeAnnotation.Tupled [ Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) []), Node _ (TypeAnnotation.Typed (Node _ ( _, "Cmd" )) [ Node _ (TypeAnnotation.Typed (Node _ ( _, "Msg" )) []) ]) ] ->
-            Just Init2
+            Init2
 
         _ ->
-            Nothing
+            Init0
 
 
-getViewType : TypeAnnotation.TypeAnnotation -> Maybe ViewType
+getViewType : TypeAnnotation.TypeAnnotation -> ViewType
 getViewType ta =
     case ta of
+        TypeAnnotation.Typed (Node _ ( _, "Html" )) [ Node _ (TypeAnnotation.GenericType _) ] ->
+            View1
+
         TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])) (Node _ (TypeAnnotation.Typed (Node _ ( _, "Html" )) [ Node _ (TypeAnnotation.Typed (Node _ ( _, "Msg" )) _) ])) ->
-            Just View2
+            View2
 
         _ ->
-            Nothing
+            View0
 
 
-getUpdateType : TypeAnnotation.TypeAnnotation -> Maybe UpdateType
+getUpdateType : TypeAnnotation.TypeAnnotation -> UpdateType
 getUpdateType ta =
     case ta of
         TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Msg" )) [])) (Node _ (TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])) (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])))) ->
-            Just Update3
+            Update3
 
         TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Msg" )) [])) (Node _ (TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])) (Node _ (TypeAnnotation.Tupled [ Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) []), Node _ (TypeAnnotation.Typed (Node _ ( _, "Cmd" )) [ Node _ (TypeAnnotation.Typed (Node _ ( _, "Msg" )) []) ]) ])))) ->
-            Just Update4
+            Update4
 
         _ ->
-            Nothing
+            Update0
 
 
-getSubscriptionType : TypeAnnotation.TypeAnnotation -> Maybe SubscriptionType
+getSubscriptionType : TypeAnnotation.TypeAnnotation -> SubscriptionType
 getSubscriptionType ta =
     case ta of
         TypeAnnotation.FunctionTypeAnnotation (Node _ (TypeAnnotation.Typed (Node _ ( _, "Model" )) [])) (Node _ (TypeAnnotation.Typed (Node _ ( _, "Sub" )) [ Node _ (TypeAnnotation.Typed (Node _ ( _, "Msg" )) _) ])) ->
-            Just Subscription2
+            Subscription2
 
         _ ->
-            Just Subscription0
+            Subscription0
