@@ -39,22 +39,15 @@ filterDeclarations names declarations =
         |> List.filter condition
 
 
-checkFunctionType : String -> (TypeAnnotation.TypeAnnotation -> Maybe a) -> Module -> a -> Maybe a
+checkFunctionType : String -> (TypeAnnotation.TypeAnnotation -> a) -> Module -> a -> a
 checkFunctionType name getter { declarations } default =
-    let
-        functionFound =
-            declarations
-                |> filterFunctions
-                |> List.filter (Tuple.first >> (==) name)
-                |> List.head
-                |> Maybe.map Tuple.second
-    in
-    case functionFound of
-        Just function ->
-            getter function
-
-        Nothing ->
-            Just default
+    declarations
+        |> filterFunctions
+        |> List.filter (Tuple.first >> (==) name)
+        |> List.head
+        |> Maybe.map Tuple.second
+        |> Maybe.map getter
+        |> Maybe.withDefault default
 
 
 functionType : Expression.Function -> Maybe TypeAnnotation.TypeAnnotation

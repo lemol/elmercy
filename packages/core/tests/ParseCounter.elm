@@ -19,6 +19,7 @@ suite =
                         SinglePage
                             { moduleName = "Main"
                             , initType = Init1
+                            , mainType = Main0
                             , updateType = Update3
                             , viewType = View2
                             , subscriptionType = Subscription0

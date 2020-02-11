@@ -114,13 +114,28 @@ processFiles paths =
                             |> List.filter (\x -> List.member x paths)
                             |> List.head
                 in
-                Just (\x -> ( SimpleHtmlAppType, [], requestSourceCode x ))
+                Just (\x -> ( SinglePageAppType, [], requestSourceCode x ))
                     |> Maybe.Extra.andMap mainFile
 
             else
                 Nothing
+
+        checkMultiple =
+            let
+                list =
+                    paths
+                        |> List.filter (String.startsWith "Pages/")
+            in
+            case list of
+                x :: xs ->
+                    Just ( MulitplePagesAppType, xs, requestSourceCode x )
+
+                [] ->
+                    Nothing
     in
-    [ checkSingleFile ]
+    [ checkMultiple
+    , checkSingleFile
+    ]
         |> List.filterMap identity
         |> List.head
         |> Maybe.withDefault ( Unknown, [], Cmd.none )

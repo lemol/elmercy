@@ -7,16 +7,12 @@ import Elm.Processing as Processing
 import Elm.RawFile as RawFile
 import Elm.Syntax.Node as Node
 import Parser.MultiplePages as MultiplePages
-import Parser.SimpleHtml as SimpleHtml
 import Parser.SinglePage as SinglePage
 
 
 parseNextSource : AppType -> App -> String -> Result String App
 parseNextSource appType app source =
     case appType of
-        SimpleHtmlAppType ->
-            parseSinglePageApp source
-
         SinglePageAppType ->
             parseSinglePageApp source
 
@@ -89,7 +85,6 @@ emitMultiplePagesApp act file_ =
 findValidApp : Module -> App
 findValidApp mod =
     [ SinglePage.find mod
-    , SimpleHtml.find mod
     ]
         |> List.filterMap identity
         |> List.head

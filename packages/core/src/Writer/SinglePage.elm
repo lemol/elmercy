@@ -13,6 +13,9 @@ write { moduleName, subscriptionType } =
 
                 Subscription2 ->
                     { browserFunction = "element", subscriptionsImprot = ", subscriptions", subscriptionsField = "\n        , subscriptions = subscriptions", viewFunction = "view", initFunction = "always init" }
+
+                SubscriptionUnknown ->
+                    { browserFunction = "element", subscriptionsImprot = ", subscriptions", subscriptionsField = "\n        , subscriptions = subscriptions", viewFunction = "view", initFunction = "always init" }
     in
     template
         |> String.replace "{MODULE_NAME}" moduleName

@@ -4,47 +4,78 @@ import Data exposing (..)
 import Elm.Interface as Interface
 import Elm.Syntax.Node exposing (Node(..))
 import Elm.Syntax.TypeAnnotation as TypeAnnotation
-import Maybe.Extra
 import Parser.Utils exposing (..)
 
 
-expectedInterface : List String
-expectedInterface =
-    [ "Model"
-    , "Msg"
-    , "init"
-    , "update"
-    , "view"
-    ]
+type alias FunctionGroup =
+    { search : List String
+    , required : List String
+    }
 
 
-completeInterface : List String
-completeInterface =
-    "subscriptions" :: expectedInterface
+simpleHtml : FunctionGroup
+simpleHtml =
+    { search = [ "view", "main" ]
+    , required = [ "view", "main" ]
+    }
+
+
+singlePage : FunctionGroup
+singlePage =
+    { search =
+        [ "Model"
+        , "Msg"
+        , "init"
+        , "update"
+        , "view"
+        , "subscriptions"
+        ]
+    , required =
+        [ "init"
+        , "update"
+        , "view"
+        ]
+    }
 
 
 find : Module -> Maybe App
 find ({ interface, declarations, name } as mod_) =
     let
-        checkInterface =
-            expectedInterface
+        isSimpleHtml =
+            simpleHtml.required
                 |> List.any (\f -> Interface.exposesFunction f interface)
+
+        isSinglePage =
+            singlePage.required
+                |> List.all (\f -> Interface.exposesFunction f interface)
+
+        search =
+            if isSinglePage then
+                singlePage.search
+
+            else if isSimpleHtml then
+                simpleHtml.search
+
+            else
+                []
 
         mod =
             { mod_
-                | declarations = filterDeclarations completeInterface declarations
+                | declarations = filterDeclarations search declarations
             }
 
-        build =
-            { moduleName = name
-            , initType = checkFunctionType "init" getInitType mod Init0
-            , viewType = checkFunctionType "view" getViewType mod View0
-            , updateType = checkFunctionType "update" getUpdateType mod Update0
-            , subscriptionType = checkFunctionType "subscriptions" getSubscriptionType mod Subscription0
-            }
+        result =
+            SinglePage
+                { moduleName = name
+                , initType = checkFunctionType "init" getInitType mod Init0
+                , mainType = checkFunctionType "main" getMainType mod Main0
+                , viewType = checkFunctionType "view" getViewType mod View0
+                , updateType = checkFunctionType "update" getUpdateType mod Update0
+                , subscriptionType = checkFunctionType "subscriptions" getSubscriptionType mod Subscription0
+                }
     in
-    if checkInterface then
-        build |> Maybe.map SinglePage
+    if isSinglePage || isSimpleHtml then
+        Just result
 
     else
         Nothing
@@ -60,7 +91,17 @@ getInitType ta =
             Init2
 
         _ ->
-            Init0
+            InitUnknown
+
+
+getMainType : TypeAnnotation.TypeAnnotation -> MainType
+getMainType ta =
+    case ta of
+        TypeAnnotation.Typed (Node _ ( _, "Html" )) [ Node _ (TypeAnnotation.GenericType _) ] ->
+            Main1
+
+        _ ->
+            MainUnknown
 
 
 getViewType : TypeAnnotation.TypeAnnotation -> ViewType
@@ -73,7 +114,7 @@ getViewType ta =
             View2
 
         _ ->
-            View0
+            ViewUnknown
 
 
 getUpdateType : TypeAnnotation.TypeAnnotation -> UpdateType
@@ -86,7 +127,7 @@ getUpdateType ta =
             Update4
 
         _ ->
-            Update0
+            UpdateUnknown
 
 
 getSubscriptionType : TypeAnnotation.TypeAnnotation -> SubscriptionType
@@ -96,4 +137,4 @@ getSubscriptionType ta =
             Subscription2
 
         _ ->
-            Subscription0
+            SubscriptionUnknown

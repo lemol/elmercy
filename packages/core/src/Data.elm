@@ -6,14 +6,12 @@ import Elm.Syntax.Declaration exposing (Declaration)
 
 type AppType
     = Unknown
-    | SimpleHtmlAppType
     | SinglePageAppType
     | MulitplePagesAppType
 
 
 type App
     = Empty
-    | SimpleHtml String String
     | SinglePage PageOptions
     | MulitplePages (List AppPage)
 
@@ -28,6 +26,7 @@ type alias AppPage =
 type alias PageOptions =
     { moduleName : String
     , initType : InitType
+    , mainType : MainType
     , updateType : UpdateType
     , viewType : ViewType
     , subscriptionType : SubscriptionType
@@ -41,24 +40,34 @@ type alias Module =
     }
 
 
+type MainType
+    = MainUnknown
+    | Main0 -- no main
+    | Main1 -- main : Html msg
+
+
 type InitType
-    = Init0 -- no init
+    = InitUnknown
+    | Init0 -- no init
     | Init1 -- init : Model
     | Init2 -- init : (Model, Cmd Msg)
 
 
 type UpdateType
-    = Update0 -- no update
+    = UpdateUnknown
+    | Update0 -- no update
     | Update3 -- update : Msg -> Model -> Model
     | Update4 -- update : Msg -> Model -> (Model, Cmd Msg)
 
 
 type ViewType
-    = View0 -- no view
+    = ViewUnknown
+    | View0 -- no view
     | View1 -- view : Html msg
     | View2 -- view : Model -> Html Msg
 
 
 type SubscriptionType
-    = Subscription0 -- no subscriptions function
+    = SubscriptionUnknown
+    | Subscription0 -- no subscriptions function
     | Subscription2 -- subscriptions : Model -> Sub Msg

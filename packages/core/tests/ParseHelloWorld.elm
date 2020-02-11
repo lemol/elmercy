@@ -37,20 +37,34 @@ suite =
             \_ ->
                 let
                     result =
-                        Parser.parseNextSource SimpleHtmlAppType Empty mainFileExposeView
+                        Parser.parseNextSource SinglePageAppType Empty mainFileExposeView
 
                     expected =
-                        SimpleHtml "Main" "view"
+                        SinglePage
+                            { moduleName = "Main"
+                            , initType = Init0
+                            , mainType = Main0
+                            , updateType = Update0
+                            , viewType = View1
+                            , subscriptionType = Subscription0
+                            }
                 in
                 result |> Expect.equal (Ok expected)
         , test "hello world exposing main : Html msg" <|
             \_ ->
                 let
                     result =
-                        Parser.parseNextSource SimpleHtmlAppType Empty mainFileExposeMain
+                        Parser.parseNextSource SinglePageAppType Empty mainFileExposeMain
 
                     expected =
-                        SimpleHtml "Main" "main"
+                        SinglePage
+                            { moduleName = "Main"
+                            , initType = Init0
+                            , mainType = Main1
+                            , updateType = Update0
+                            , viewType = View0
+                            , subscriptionType = Subscription0
+                            }
                 in
                 result |> Expect.equal (Ok expected)
         ]
