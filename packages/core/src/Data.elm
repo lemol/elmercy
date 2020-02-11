@@ -42,17 +42,20 @@ type alias Module =
 
 
 type InitType
-    = Init1 -- init : Model
+    = Init0 -- no init
+    | Init1 -- init : Model
     | Init2 -- init : (Model, Cmd Msg)
 
 
 type UpdateType
-    = Update3 -- update : Msg -> Model -> Model
+    = Update0 -- no update
+    | Update3 -- update : Msg -> Model -> Model
     | Update4 -- update : Msg -> Model -> (Model, Cmd Msg)
 
 
 type ViewType
-    = View2 -- view : Model -> Html Msg
+    = View1 -- view : Html msg
+    | View2 -- view : Model -> Html Msg
 
 
 type SubscriptionType
