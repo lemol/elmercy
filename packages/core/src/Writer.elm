@@ -14,5 +14,13 @@ getResult app =
         SinglePage x ->
             [ ( "Main.elm", SinglePage.write x ) ]
 
+        MulitplePages pages ->
+            [ ( "Data.elm", Debug.todo "" )
+            , ( "Main.elm", Debug.todo "" )
+            , ( "Page.elm", Debug.todo "" )
+            , ( "Routes.elm", Debug.todo "" )
+            , ( "Utils.elm", Debug.todo "" )
+            ]
+
         _ ->
             []
