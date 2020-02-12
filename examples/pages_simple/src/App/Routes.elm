@@ -4,10 +4,6 @@ import Url exposing (Url)
 import Url.Parser exposing (Parser, map, oneOf, parse, s, top)
 
 
-
--- DATA
-
-
 type Route
     = Index
     | About
@@ -17,7 +13,6 @@ type Route
 parseUrl : Url -> Route
 parseUrl url =
     let
-        -- for HashRouting { url | path = url.fragment |> Maybe.withDefault "" }
         newUrl =
             { url | path = url.fragment |> Maybe.withDefault "" }
     in
@@ -32,7 +27,6 @@ parseUrl url =
 toPath : Route -> String
 toPath route =
     let
-        -- for HashRouting #
         prefix =
             "#"
 
@@ -43,9 +37,6 @@ toPath route =
 
                 Index ->
                     "/"
-
-                About ->
-                    "/about"
     in
     prefix ++ path
 

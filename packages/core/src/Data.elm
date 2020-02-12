@@ -5,15 +5,15 @@ import Elm.Syntax.Declaration exposing (Declaration)
 
 
 type AppType
-    = Unknown
-    | SinglePageAppType
+    = UnknownAppType
+    | OnePageAppType
     | MulitplePagesAppType
 
 
 type App
-    = Empty
-    | SinglePage PageOptions
-    | MulitplePages (List AppPage)
+    = EmptyApp
+    | OnePageApp PageOptions
+    | MulitplePagesApp (List AppPage)
 
 
 type alias AppPage =
@@ -70,4 +70,5 @@ type ViewType
 type SubscriptionType
     = SubscriptionUnknown
     | Subscription0 -- no subscriptions function
+    | Subscription1 -- subscriptions : Sub Msg
     | Subscription2 -- subscriptions : Model -> Sub Msg

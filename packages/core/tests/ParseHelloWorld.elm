@@ -37,10 +37,10 @@ suite =
             \_ ->
                 let
                     result =
-                        Parser.parseNextSource SinglePageAppType Empty mainFileExposeView
+                        Parser.parseNextSource OnePageAppType EmptyApp mainFileExposeView
 
                     expected =
-                        SinglePage
+                        OnePageApp
                             { moduleName = "Main"
                             , initType = Init0
                             , mainType = Main0
@@ -54,10 +54,10 @@ suite =
             \_ ->
                 let
                     result =
-                        Parser.parseNextSource SinglePageAppType Empty mainFileExposeMain
+                        Parser.parseNextSource OnePageAppType EmptyApp mainFileExposeMain
 
                     expected =
-                        SinglePage
+                        OnePageApp
                             { moduleName = "Main"
                             , initType = Init0
                             , mainType = Main1

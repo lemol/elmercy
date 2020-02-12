@@ -13,12 +13,12 @@ suite =
             \_ ->
                 let
                     result =
-                        Ok Empty
+                        Ok EmptyApp
                             |> Result.andThen (\app -> Parser.parseNextSource MulitplePagesAppType app indexPage)
                             |> Result.andThen (\app -> Parser.parseNextSource MulitplePagesAppType app aboutPage)
 
                     expected =
-                        MulitplePages
+                        MulitplePagesApp
                             [ { routeName = "Index"
                               , routePath = "/"
                               , options =

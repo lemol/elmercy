@@ -33,8 +33,8 @@ type alias Model =
 
 init : ( Model, Cmd Msg )
 init =
-    ( { app = Empty
-      , appType = Unknown
+    ( { app = EmptyApp
+      , appType = UnknownAppType
       , pendingFiles = []
       }
     , Cmd.none
@@ -65,7 +65,7 @@ update msg model =
             in
             ( { model
                 | appType = appType
-                , app = Empty
+                , app = EmptyApp
                 , pendingFiles = pendingFiles
               }
             , cmd
@@ -92,7 +92,7 @@ update msg model =
         WriteApp ->
             let
                 result =
-                    Writer.getResult model.app
+                    Writer.result model.app
             in
             ( model
             , writeResult result
@@ -102,7 +102,7 @@ update msg model =
 processFiles : List String -> ( AppType, List String, Cmd Msg )
 processFiles paths =
     let
-        checkSingleFile =
+        checkOnePage =
             if not (paths |> List.any (String.startsWith "Pages/")) then
                 let
                     mainFile =
@@ -112,13 +112,13 @@ processFiles paths =
                             |> List.filter (\x -> List.member x paths)
                             |> List.head
                 in
-                Just (\x -> ( SinglePageAppType, [], requestSourceCode x ))
+                Just (\x -> ( OnePageAppType, [], requestSourceCode x ))
                     |> Maybe.Extra.andMap mainFile
 
             else
                 Nothing
 
-        checkMultiple =
+        checkMultiplePages =
             let
                 list =
                     paths
@@ -131,12 +131,12 @@ processFiles paths =
                 [] ->
                     Nothing
     in
-    [ checkMultiple
-    , checkSingleFile
+    [ checkMultiplePages
+    , checkOnePage
     ]
         |> List.filterMap identity
         |> List.head
-        |> Maybe.withDefault ( Unknown, [], Cmd.none )
+        |> Maybe.withDefault ( UnknownAppType, [], Cmd.none )
         |> identity
 
 

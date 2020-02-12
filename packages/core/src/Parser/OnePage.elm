@@ -1,4 +1,4 @@
-module Parser.SinglePage exposing (find)
+module Parser.OnePage exposing (find)
 
 import Data exposing (..)
 import Elm.Interface as Interface
@@ -65,7 +65,7 @@ find ({ interface, declarations, name } as mod_) =
             }
 
         result =
-            SinglePage
+            OnePageApp
                 { moduleName = name
                 , initType = checkFunctionType "init" getInitType mod Init0
                 , mainType = checkFunctionType "main" getMainType mod Main0

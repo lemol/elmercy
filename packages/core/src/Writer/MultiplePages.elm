@@ -1,4 +1,4 @@
-module Writer.MultipleWriter exposing (write)
+module Writer.MultiplePages exposing (write)
 
 import Data exposing (AppPage, SubscriptionType(..))
 import Elm.CodeGen as CodeGen exposing (..)

@@ -13,10 +13,10 @@ suite =
             \_ ->
                 let
                     result =
-                        Parser.parseNextSource SinglePageAppType Empty mainFile
+                        Parser.parseNextSource OnePageAppType EmptyApp mainFile
 
                     expected =
-                        SinglePage
+                        OnePageApp
                             { moduleName = "Main"
                             , initType = Init2
                             , mainType = Main0

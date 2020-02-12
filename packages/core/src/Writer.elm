@@ -1,18 +1,18 @@
-module Writer exposing (getResult)
+module Writer exposing (result)
 
 import Data exposing (App(..))
-import Writer.MultipleWriter as MultipleWriter
-import Writer.SinglePage as SinglePage
+import Writer.MultiplePages as MultiplePages
+import Writer.OnePage as OnePage
 
 
-getResult : App -> List ( String, String )
-getResult app =
+result : App -> List ( String, String )
+result app =
     case app of
-        SinglePage x ->
-            [ ( "Main.elm", SinglePage.write x ) ]
+        OnePageApp options ->
+            OnePage.write options
 
-        MulitplePages pages ->
-            MultipleWriter.write pages
+        MulitplePagesApp pages ->
+            MultiplePages.write pages
 
         _ ->
             []

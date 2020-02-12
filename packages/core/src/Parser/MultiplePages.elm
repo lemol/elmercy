@@ -3,7 +3,7 @@ module Parser.MultiplePages exposing (find)
 import Data exposing (..)
 import Elm.Syntax.Node exposing (Node(..))
 import Maybe.Extra
-import Parser.SinglePage as SinglePage
+import Parser.OnePage as OnePage
 import Parser.Utils exposing (..)
 
 
@@ -11,7 +11,7 @@ find : List AppPage -> Module -> Maybe App
 find act mod =
     let
         match =
-            [ SinglePage.find mod
+            [ OnePage.find mod
             ]
                 |> List.filterMap identity
                 |> List.map toMultiplePagesItem
@@ -29,14 +29,14 @@ find act mod =
 
         x ->
             x
-                |> MulitplePages
+                |> MulitplePagesApp
                 |> Just
 
 
 toMultiplePagesItem : App -> Maybe AppPage
 toMultiplePagesItem app =
     case app of
-        SinglePage options ->
+        OnePageApp options ->
             Just
                 { routeName = mkRouteName options.moduleName
                 , routePath = mkPath options.moduleName

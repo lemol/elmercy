@@ -1,53 +1,46 @@
 module Parser exposing (parseNextSource)
 
-import Data exposing (App(..), AppPage, AppType(..), Module)
+import Data exposing (App(..), AppType(..), Module)
 import Elm.Interface as Interface
 import Elm.Parser
 import Elm.Processing as Processing
 import Elm.RawFile as RawFile
 import Elm.Syntax.Node as Node
 import Parser.MultiplePages as MultiplePages
-import Parser.SinglePage as SinglePage
+import Parser.OnePage as OnePage
 
 
 parseNextSource : AppType -> App -> String -> Result String App
-parseNextSource appType app source =
+parseNextSource appType app =
     case appType of
-        SinglePageAppType ->
-            parseSinglePageApp source
+        OnePageAppType ->
+            parse OnePage.find
 
         MulitplePagesAppType ->
             let
                 list =
                     case app of
-                        MulitplePages x ->
+                        MulitplePagesApp x ->
                             x
 
                         _ ->
                             []
             in
-            parseMultiplePagesApp list source
+            parse (MultiplePages.find list)
 
-        _ ->
-            Err "<not implemented yet>"
+        UnknownAppType ->
+            always <| Err "<unknown app type>"
 
 
-parseSinglePageApp : String -> Result String App
-parseSinglePageApp sourceCode =
+parse : (Module -> Maybe App) -> String -> Result String App
+parse finder sourceCode =
     Elm.Parser.parse sourceCode
-        |> Result.map emitSiglePageApp
-        |> Result.mapError (always "ERROR")
+        |> Result.map (emitApp finder)
+        |> Result.mapError (always "<parse error>")
 
 
-parseMultiplePagesApp : List AppPage -> String -> Result String App
-parseMultiplePagesApp act sourceCode =
-    Elm.Parser.parse sourceCode
-        |> Result.map (emitMultiplePagesApp act)
-        |> Result.mapError (always "ERROR")
-
-
-emitSiglePageApp : RawFile.RawFile -> App
-emitSiglePageApp file_ =
+emitApp : (Module -> Maybe App) -> RawFile.RawFile -> App
+emitApp finder file_ =
     let
         file =
             file_
@@ -61,40 +54,6 @@ emitSiglePageApp file_ =
             , interface = Interface.build file_
             }
     in
-    findValidApp mod
-
-
-emitMultiplePagesApp : List AppPage -> RawFile.RawFile -> App
-emitMultiplePagesApp act file_ =
-    let
-        file =
-            file_
-                |> Processing.process Processing.init
-
-        mod =
-            { name =
-                RawFile.moduleName file_
-                    |> String.join "."
-            , declarations = file.declarations |> List.map Node.value
-            , interface = Interface.build file_
-            }
-    in
-    findValidAppMultiple act mod
-
-
-findValidApp : Module -> App
-findValidApp mod =
-    [ SinglePage.find mod
-    ]
-        |> List.filterMap identity
-        |> List.head
-        |> Maybe.withDefault Empty
-
-
-findValidAppMultiple : List AppPage -> Module -> App
-findValidAppMultiple act mod =
-    [ MultiplePages.find act mod
-    ]
-        |> List.filterMap identity
-        |> List.head
-        |> Maybe.withDefault Empty
+    mod
+        |> finder
+        |> Maybe.withDefault EmptyApp

@@ -1,7 +1,7 @@
 module App.Main exposing (main)
 
 import Html exposing (Html)
-import Main
+import Main exposing (view)
 
 
 main : Html msg
