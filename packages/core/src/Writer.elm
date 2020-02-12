@@ -1,6 +1,7 @@
 module Writer exposing (getResult)
 
 import Data exposing (App(..))
+import Writer.MultipleWriter as MultipleWriter
 import Writer.SinglePage as SinglePage
 
 
@@ -11,12 +12,7 @@ getResult app =
             [ ( "Main.elm", SinglePage.write x ) ]
 
         MulitplePages pages ->
-            [ ( "Data.elm", "-- Data.elm" )
-            , ( "Main.elm", "-- Main.elm" )
-            , ( "Page.elm", "-- Page.elm" )
-            , ( "Routes.elm", "-- Routes.elm" )
-            , ( "Utils.elm", "-- Utils.elm" )
-            ]
+            MultipleWriter.write pages
 
         _ ->
             []

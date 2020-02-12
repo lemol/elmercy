@@ -71,21 +71,19 @@ update msg model =
             , cmd
             )
 
-        GotSourceCode ( path, source ) ->
+        GotSourceCode ( _, source ) ->
             let
                 newApp =
                     Parser.parseNextSource model.appType model.app source
                         |> Result.withDefault model.app
 
-                nextCmd =
-                    model.pendingFiles
-                        |> List.head
-                        |> Maybe.map requestSourceCode
-                        |> Maybe.withDefault (send WriteApp)
+                ( pendingFiles, nextCmd ) =
+                    case model.pendingFiles of
+                        x :: xs ->
+                            ( xs, requestSourceCode x )
 
-                pendingFiles =
-                    model.pendingFiles
-                        |> List.filter ((/=) path)
+                        [] ->
+                            ( [], send WriteApp )
             in
             ( { model | app = newApp, pendingFiles = pendingFiles }
             , nextCmd
