@@ -5,8 +5,8 @@ import Url.Parser exposing (Parser, map, oneOf, parse, s, top)
 
 
 type Route
-    = About
-    | Index
+    = Index
+    | About
     | NotFound
 
 
@@ -32,18 +32,21 @@ toPath route =
 
         path =
             case route of
-                About ->
-                    "/about"
+                NotFound ->
+                    "/404"
 
                 Index ->
                     "/"
 
-                NotFound ->
-                    "/404"
+                About ->
+                    "/about"
     in
     prefix ++ path
 
 
 matchRoute : Parser (Route -> a) a
 matchRoute =
-    oneOf [ map About (s "/about"), map Index top, map NotFound (s "/404") ]
+    oneOf
+        [ map Index top
+        , map About (s "about")
+        ]
