@@ -8,11 +8,9 @@ import Elm.Pretty as Pretty
 write : String
 write =
     let
-        moduleName =
-            [ "App", "Data" ]
-
         module_ =
-            normalModule moduleName
+            normalModule
+                [ "App", "Data" ]
                 [ typeOrAliasExpose "Model"
                 , funExpose "init"
                 ]
@@ -39,13 +37,22 @@ write =
                       )
                     ]
 
+        initAnn =
+            funAnn
+                (typed "Navigation.Key" [])
+                (funAnn (typed "Routes.Route" []) (typed "Model" []))
+
         initDecl =
             funDecl
                 Nothing
-                (Just <| funAnn (typed "Navigation.Key" []) (funAnn (typed "Routes.Route" []) (typed "Model" [])))
+                (Just initAnn)
                 "init"
                 [ varPattern "key", varPattern "route" ]
-                (record [ ( "navigationKey", val "key" ), ( "route", val "route" ) ])
+                (record
+                    [ ( "navigationKey", val "key" )
+                    , ( "route", val "route" )
+                    ]
+                )
     in
     CodeGen.file module_ importList declarationList Nothing
         |> Pretty.pretty 100

@@ -11,8 +11,8 @@ result app =
         OnePageApp options ->
             OnePage.write options
 
-        MulitplePagesApp pages ->
-            MultiplePages.write pages
+        MulitplePagesApp config pages ->
+            MultiplePages.write config pages
 
         _ ->
             []

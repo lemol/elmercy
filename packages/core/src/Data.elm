@@ -13,7 +13,7 @@ type AppType
 type App
     = EmptyApp
     | OnePageApp PageOptions
-    | MulitplePagesApp (List AppPage)
+    | MulitplePagesApp AppConfig (List AppPage)
 
 
 type alias AppPage =
@@ -31,6 +31,10 @@ type alias PageOptions =
     , viewType : ViewType
     , subscriptionType : SubscriptionType
     }
+
+
+type alias AppConfig =
+    { notFound : AppPage }
 
 
 type alias Module =
@@ -72,3 +76,20 @@ type SubscriptionType
     | Subscription0 -- no subscriptions function
     | Subscription1 -- subscriptions : Sub Msg
     | Subscription2 -- subscriptions : Model -> Sub Msg
+
+
+defaultAppConfig : AppConfig
+defaultAppConfig =
+    { notFound =
+        { routeName = "NotFound"
+        , routePath = "/404"
+        , options =
+            { moduleName = "App.NotFound"
+            , initType = Init0
+            , mainType = Main0
+            , updateType = Update0
+            , viewType = View1
+            , subscriptionType = Subscription0
+            }
+        }
+    }

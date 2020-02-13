@@ -20,7 +20,7 @@ parseNextSource appType app =
             let
                 list =
                     case app of
-                        MulitplePagesApp x ->
+                        MulitplePagesApp _ x ->
                             x
 
                         _ ->

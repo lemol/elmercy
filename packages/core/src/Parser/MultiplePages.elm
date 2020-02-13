@@ -29,7 +29,7 @@ find act mod =
 
         x ->
             x
-                |> MulitplePagesApp
+                |> MulitplePagesApp defaultAppConfig
                 |> Just
 
 
