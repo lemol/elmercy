@@ -25,102 +25,12 @@ write config =
 
         declarationList =
             [ mainDecl
-            , parseUrlDecl
-            , toPathDecl
-            , matchRouteDecl
+            , flagsDecl
+            , initDecl
+            , updateDecl
+            , subscriptionsDecl
+            , viewDecl
             ]
-
-        -- DECLARATIONS
-        routeDecl =
-            customTypeDecl Nothing
-                "Route"
-                []
-                (pages
-                    |> List.map routeConst
-                )
-
-        parseUrlAnn =
-            funAnn (typed "Url" []) (typed "Route" [])
-
-        parseUrlBody =
-            letExpr
-                [ letFunction "newUrl"
-                    []
-                    (update "url"
-                        [ ( "path"
-                          , applyBinOp (access (val "url") "fragment")
-                                piper
-                                (apply
-                                    [ fqFun [ "Maybe" ] "withDefault"
-                                    , string ""
-                                    ]
-                                )
-                          )
-                        ]
-                    )
-                ]
-                (caseExpr
-                    (apply [ val "parse", val "matchRoute", val "newUrl" ])
-                    [ ( namedPattern "Just" [ varPattern "route" ]
-                      , val "route"
-                      )
-                    , ( namedPattern "Nothing" []
-                      , val config.notFound.routeName
-                      )
-                    ]
-                )
-
-        parseUrlDecl =
-            funDecl
-                Nothing
-                (Just parseUrlAnn)
-                "parseUrl"
-                [ varPattern "url" ]
-                parseUrlBody
-
-        toPathAnn =
-            funAnn (typed "Route" []) (typed "String" [])
-
-        toPathBody =
-            letExpr
-                [ letFunction "prefix" [] (string "#")
-                , letFunction "path"
-                    []
-                    (caseExpr
-                        (val "route")
-                        (List.map routePathPair pages)
-                    )
-                ]
-                (applyBinOp (val "prefix") append (val "path"))
-
-        toPathDecl =
-            funDecl
-                Nothing
-                (Just toPathAnn)
-                "toPath"
-                [ varPattern "route" ]
-                toPathBody
-
-        matchRouteAnn =
-            typed "Parser"
-                [ funAnn (typed "Route" []) (typeVar "a")
-                , typeVar "a"
-                ]
-
-        matchRouteBody =
-            apply
-                [ val "oneOf"
-                , pages
-                    |> List.map routeMap
-                    |> list
-                ]
-
-        matchRouteDecl =
-            funDecl Nothing
-                (Just matchRouteAnn)
-                "matchRoute"
-                []
-                matchRouteBody
     in
     CodeGen.file module_ importList declarationList Nothing
         |> Pretty.pretty 100
@@ -165,6 +75,165 @@ mainDecl =
         mainBody
 
 
+
+-- FLAGS TYPE
+
+
+flagsDecl : Declaration
+flagsDecl =
+    aliasDecl
+        Nothing
+        "Flags"
+        []
+        unitAnn
+
+
+
+-- MODEL TYPE
+
+
+modelDecl : Declaration
+modelDecl =
+    aliasDecl
+        Nothing
+        "Model"
+        []
+        (recordAnn
+            [ ( "app", typed "Data.Model" [] )
+            , ( "page", typed "Page.Model" [] )
+            ]
+        )
+
+
+
+-- MSG TYPE
+
+
+msgDecl : Declaration
+msgDecl =
+    customTypeDecl
+        Nothing
+        "Msg"
+        []
+        [ ( "LinkClicked", typed "Browser.UrlRequest" [] )
+        , ( "UrlChanged", typed "Url.Url" [] )
+        , ( "PageMsg", typed "Page.Msg" [] )
+        ]
+
+
+
+-- INIT FUNCTION DECLARATION
+
+
+initAnn : TypeAnnotation
+initAnn =
+    funAnn
+        (typed "Flags" [])
+        (funAnn
+            (typed "Url.Url" [])
+            (funAnn
+                (typed "Navigation.Key" [])
+                (tupleAnn
+                    [ typed "Model" []
+                    , typed "Cmd" [ typed "Msg" [] ]
+                    ]
+                )
+            )
+        )
+
+
+initBody : Expression
+initBody =
+    let
+        decls =
+            [ letFunction "route"
+                []
+                (apply [ val "parseUrl", val "url" ])
+            , letFunction "appModel"
+                []
+                (apply
+                    [ fqVal [ "App" ] "init"
+                    , val "key"
+                    , val "route"
+                    ]
+                )
+            , letDestructuring
+                (tuplePattern
+                    [ namedPattern "pageModel"
+                    , namedPattern "pageCmd"
+                    ]
+                )
+            , letFunction "model"
+                []
+                (record
+                    [ ( "app", val "appModel" )
+                    , ( "page", val "pageModel" )
+                    ]
+                )
+            ]
+
+        body =
+            tuple
+                (val "model")
+                (apply
+                    [ fqVal [ "Cmd" ] "batch"
+                    , list
+                        [ apply
+                            [ fqVal [ "Cmd" ] "map"
+                            , construct "PageMsg" []
+                            , val "pageCmd"
+                            ]
+                        ]
+                    ]
+                )
+    in
+    letExpr decls body
+
+
+initDecl : Declaration
+initDecl =
+    funDecl
+        Nothing
+        initAnn
+        "init"
+        []
+        initBody
+
+
+
+-- UPDATE FUNCTION
+
+
+updateAnn : TypeAnnotation
+updateAnn =
+    funAnn
+        (typed "Msg" [])
+        (funAnn
+            (typed "Model" [])
+            (tupleAnn
+                [ typed "Model" []
+                , typed "Cmd" [ typed "Msg" [] ]
+                ]
+            )
+        )
+
+
+updateBody : Expression
+updateBody =
+    let
+    in
+    caseExpr
+        (val "msg")
+        []
+
+updateDecl : Declaration
+updateDecl =
+    funDecl
+        Nothing
+        updateAnn
+        "update"
+        []
+        updateBody
 
 -- IMPORTS
 
