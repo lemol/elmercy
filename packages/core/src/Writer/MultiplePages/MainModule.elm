@@ -1,12 +1,12 @@
 module Writer.MultiplePages.MainModule exposing (write)
 
-import Data exposing (AppConfig, AppPage, SubscriptionType(..))
+import Data exposing (AppConfig, SubscriptionType(..))
 import Elm.CodeGen as CodeGen exposing (..)
 import Elm.Pretty as Pretty
 
 
 write : AppConfig -> String
-write config =
+write _ =
     let
         module_ =
             normalModule
@@ -26,6 +26,8 @@ write config =
         declarationList =
             [ mainDecl
             , flagsDecl
+            , modelDecl
+            , msgDecl
             , initDecl
             , updateDecl
             , subscriptionsDecl
@@ -47,7 +49,6 @@ mainAnn =
         , typed "Model" []
         , typed "Msg" []
         ]
-        |> Just
 
 
 mainBody : Expression
@@ -69,7 +70,7 @@ mainDecl : Declaration
 mainDecl =
     funDecl
         Nothing
-        mainAnn
+        (Just mainAnn)
         "main"
         []
         mainBody
@@ -115,9 +116,9 @@ msgDecl =
         Nothing
         "Msg"
         []
-        [ ( "LinkClicked", typed "Browser.UrlRequest" [] )
-        , ( "UrlChanged", typed "Url.Url" [] )
-        , ( "PageMsg", typed "Page.Msg" [] )
+        [ ( "LinkClicked", [ typed "Browser.UrlRequest" [] ] )
+        , ( "UrlChanged", [ typed "Url.Url" [] ] )
+        , ( "PageMsg", [ typed "Page.Msg" [] ] )
         ]
 
 
@@ -159,8 +160,13 @@ initBody =
                 )
             , letDestructuring
                 (tuplePattern
-                    [ namedPattern "pageModel"
-                    , namedPattern "pageCmd"
+                    [ namedPattern "pageModel" []
+                    , namedPattern "pageCmd" []
+                    ]
+                )
+                (apply
+                    [ fqVal [ "Page" ] "init"
+                    , val "route"
                     ]
                 )
             , letFunction "model"
@@ -174,8 +180,8 @@ initBody =
 
         body =
             tuple
-                (val "model")
-                (apply
+                [ val "model"
+                , apply
                     [ fqVal [ "Cmd" ] "batch"
                     , list
                         [ apply
@@ -185,7 +191,7 @@ initBody =
                             ]
                         ]
                     ]
-                )
+                ]
     in
     letExpr decls body
 
@@ -194,7 +200,7 @@ initDecl : Declaration
 initDecl =
     funDecl
         Nothing
-        initAnn
+        (Just initAnn)
         "init"
         []
         initBody
@@ -221,19 +227,218 @@ updateAnn =
 updateBody : Expression
 updateBody =
     let
+        linkClicked =
+            caseExpr (val "urlRequest")
+                [ ( fqNamedPattern [ "Browser" ] "Internal" [ varPattern "url" ]
+                  , tuple
+                        [ val "model"
+                        , apply
+                            [ fqVal [ "Navigation" ] "pushUrl"
+                            , val "model"
+                                |> flip access "app"
+                                |> flip access "navigationKey"
+                            , parens
+                                (apply
+                                    [ fqVal [ "Url" ] "toString"
+                                    , val "url"
+                                    ]
+                                )
+                            ]
+                        ]
+                  )
+                , ( fqNamedPattern [ "Browser" ] "External" [ varPattern "href" ]
+                  , tuple
+                        [ val "model"
+                        , apply
+                            [ fqVal [ "Navigation" ] "load"
+                            , val "href"
+                            ]
+                        ]
+                  )
+                ]
     in
     caseExpr
         (val "msg")
-        []
+        [ ( namedPattern "LinkClicked" [ varPattern "urlRequest" ]
+          , linkClicked
+          )
+        , ( namedPattern "UrlChanged" [ varPattern "url" ]
+          , updateDeclUrlChanged
+          )
+        , ( namedPattern "PageMsg" [ varPattern "subMsg" ]
+          , updateDeclPageMsg
+          )
+        ]
+
+
+updateDeclUrlChanged : Expression
+updateDeclUrlChanged =
+    let
+        decls =
+            [ letFunction "app"
+                []
+                (val "model" |> flip access "app")
+            , letFunction "route"
+                []
+                (apply [ val "parseUrl", val "url" ])
+            , letFunction "newApp"
+                []
+                (update "app"
+                    [ ( "route", val "route" )
+                    ]
+                )
+            , letDestructuring
+                (tuplePattern
+                    [ namedPattern "newPage" []
+                    , namedPattern "newPageCmd" []
+                    ]
+                )
+                (apply
+                    [ fqVal [ "Page" ] "enterRoute"
+                    , val "model" |> flip access "page"
+                    , val "route"
+                    ]
+                )
+            ]
+    in
+    letExpr decls
+        (tuple
+            [ update "model"
+                [ ( "page", val "newPage" )
+                , ( "app", val "newApp" )
+                ]
+            , apply
+                [ fqVal [ "Cmd" ] "batch"
+                , list
+                    [ apply
+                        [ fqVal [ "Cmd" ] "map"
+                        , construct "PageMsg" []
+                        , val "newPageCmd"
+                        ]
+                    ]
+                ]
+            ]
+        )
+
+
+updateDeclPageMsg : Expression
+updateDeclPageMsg =
+    letExpr
+        [ letDestructuring
+            (tuplePattern
+                [ namedPattern "newPage" []
+                , namedPattern "newPageCmd" []
+                ]
+            )
+            (apply
+                [ fqVal [ "Page" ] "update"
+                , val "subMsg"
+                , val "model" |> flip access "page"
+                ]
+            )
+        ]
+        (tuple
+            [ update "model"
+                [ ( "page", val "newPage" )
+                ]
+            , apply
+                [ fqVal [ "Cmd" ] "batch"
+                , list
+                    [ apply
+                        [ fqVal [ "Cmd" ] "map"
+                        , construct "PageMsg" []
+                        , val "newPageCmd"
+                        ]
+                    ]
+                ]
+            ]
+        )
+
 
 updateDecl : Declaration
 updateDecl =
     funDecl
         Nothing
-        updateAnn
+        (Just updateAnn)
         "update"
-        []
+        [ varPattern "msg", varPattern "model" ]
         updateBody
+
+
+
+-- SUBSCRIPTIONS FUNCTION
+
+
+subscriptionsAnn : TypeAnnotation
+subscriptionsAnn =
+    funAnn
+        (typed "Model" [])
+        (typed "Sub" [ typed "Msg" [] ])
+
+
+subscriptionsBody : Expression
+subscriptionsBody =
+    apply
+        [ fqVal [ "Sub" ] "batch"
+        , list []
+        ]
+
+
+subscriptionsDecl : Declaration
+subscriptionsDecl =
+    funDecl
+        Nothing
+        (Just subscriptionsAnn)
+        "subscriptions"
+        [ allPattern ]
+        subscriptionsBody
+
+
+
+-- VIEW FUNCTION
+
+
+flip : (a -> b -> c) -> (b -> a -> c)
+flip f =
+    \b a -> f a b
+
+
+viewAnn : TypeAnnotation
+viewAnn =
+    funAnn
+        (typed "Model" [])
+        (typed "Browser.Document" [ typed "Msg" [] ])
+
+
+viewBody : Expression
+viewBody =
+    pipe
+        (apply
+            [ fqVal [ "Page" ] "view"
+            , val "model"
+                |> flip access "app"
+                |> flip access "route"
+            , val "model"
+                |> flip access "page"
+            ]
+        )
+        [ apply
+            [ val "mapDocument"
+            , construct "PageMsg" []
+            ]
+        ]
+
+
+viewDecl : Declaration
+viewDecl =
+    funDecl
+        Nothing
+        (Just viewAnn)
+        "view"
+        [ varPattern "model" ]
+        viewBody
+
+
 
 -- IMPORTS
 
@@ -283,7 +488,7 @@ importUrl =
     importStmt
         [ "Url" ]
         Nothing
-        (Just <| exposeExplicit [ closedTypeExpose "Url" ])
+        Nothing
 
 
 importUrlParser : Import
