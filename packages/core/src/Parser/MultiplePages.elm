@@ -70,7 +70,7 @@ mkPath moduleName =
         "/"
 
     else
-        "/" ++ base
+        base
 
 
 mkRouteName : String -> String

@@ -3,6 +3,7 @@ module Writer.MultiplePages.MainModule exposing (write)
 import Data exposing (AppConfig, SubscriptionType(..))
 import Elm.CodeGen as CodeGen exposing (..)
 import Elm.Pretty as Pretty
+import Utils exposing (..)
 
 
 write : AppConfig -> String
@@ -17,6 +18,7 @@ write _ =
             [ importAppData
             , importAppPage
             , importAppRoutes
+            , importAppUtils
             , importBrowser
             , importBrowserNavigation
             , importUrl
@@ -153,7 +155,7 @@ initBody =
             , letFunction "appModel"
                 []
                 (apply
-                    [ fqVal [ "App" ] "init"
+                    [ fqVal [ "Data" ] "init"
                     , val "key"
                     , val "route"
                     ]
@@ -202,7 +204,7 @@ initDecl =
         Nothing
         (Just initAnn)
         "init"
-        []
+        [ allPattern, varPattern "url", varPattern "key" ]
         initBody
 
 
@@ -398,11 +400,6 @@ subscriptionsDecl =
 -- VIEW FUNCTION
 
 
-flip : (a -> b -> c) -> (b -> a -> c)
-flip f =
-    \b a -> f a b
-
-
 viewAnn : TypeAnnotation
 viewAnn =
     funAnn
@@ -467,6 +464,14 @@ importAppRoutes =
         (Just <| exposeExplicit [ funExpose "parseUrl" ])
 
 
+importAppUtils : Import
+importAppUtils =
+    importStmt
+        [ "App", "Utils" ]
+        Nothing
+        (Just <| exposeExplicit [ funExpose "mapDocument" ])
+
+
 importBrowser : Import
 importBrowser =
     importStmt
@@ -496,4 +501,4 @@ importUrlParser =
     importStmt
         [ "Url", "Parser" ]
         Nothing
-        (Just <| exposeExplicit [ funExpose "main" ])
+        (Just <| exposeExplicit [ funExpose "map" ])

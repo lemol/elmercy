@@ -1,5 +1,6 @@
 module App.Page exposing (Model, Msg, enterRoute, init, update, view)
 
+import App.NotFound
 import App.Routes as Routes
 import App.Utils exposing (mapDocument)
 import Browser
@@ -89,9 +90,8 @@ view : Routes.Route -> Model -> Browser.Document Msg
 view route model =
     case route of
         Routes.NotFound ->
-            { title = "404"
-            , body = [ text "Not Found" ]
-            }
+            App.NotFound.view
+                |> toDocument "404"
 
         Routes.Index ->
             model.index
