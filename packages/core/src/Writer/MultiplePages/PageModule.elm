@@ -40,6 +40,7 @@ write config pages_ =
             , viewDecl allPages
             , viewEmptyDecl
             , toDocumentDecl
+            , subscriptionsDecl allPages
             ]
     in
     CodeGen.file module_ importList declarationList Nothing
@@ -436,6 +437,73 @@ viewDecl pages =
 
 
 
+-- INIT FUNCTION DECLARATION
+
+
+subscriptionsAnn : TypeAnnotation
+subscriptionsAnn =
+    funAnn
+        (typed "Model" [])
+        (typed "Sub" [ typed "Msg" [] ])
+
+
+subscriptionsBody : List AppPage -> Expression
+subscriptionsBody pages_ =
+    let
+        pages =
+            pages_
+            |> List.filter pageHasSubscriptions
+
+        pageSubscription page =
+            case page.options.subscriptionType of
+                Subscription1 ->
+                    apply
+                        [ fqVal ["Sub"] "map"
+                        , msgConstructor page
+                        , val (page.options.moduleName ++ ".subscriptions")
+                        ]
+
+                Subscription2 ->
+                    pipe
+                        (val "model" |> flip access "counterAsync")
+                        [ apply
+                            [ fqVal ["Maybe"] "map"
+                            , val (page.options.moduleName ++ ".subscriptions")
+                            ]
+                        , apply
+                            [ fqVal ["Maybe"] "map"
+                            , parens
+                                (apply
+                                    [ fqVal ["Sub"] "map"
+                                    , msgConstructor page
+                                    ]
+                                )
+                            ]
+                        ]
+                
+                _ ->
+                    string "<invalid subsription type>"
+    in
+    pipe
+        (list (pages |> List.map pageSubscription))
+        [ apply
+            [ fqVal ["List"] "filterMap"
+            , val "identity"
+            ]
+        , fqVal ["Sub"] "batch"
+        ]
+
+
+subscriptionsDecl : List AppPage -> Declaration
+subscriptionsDecl pages =
+    funDecl
+        Nothing
+        (Just subscriptionsAnn)
+        "subscriptions"
+        [ varPattern "model" ]
+        (subscriptionsBody pages)
+
+
 -- VIEWEMPTY DECL
 
 
@@ -574,6 +642,14 @@ pageHasCmd page =
     pageHasModel page
         && page.options.initType
         /= Init1
+
+
+pageHasSubscriptions : AppPage -> Bool
+pageHasSubscriptions page =
+    page.options.subscriptionType
+        /= SubscriptionUnknown
+        && page.options.subscriptionType
+        /= Subscription0
 
 
 pageHasModel : AppPage -> Bool
