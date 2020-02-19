@@ -55,7 +55,8 @@ modelDecl pages =
     let
         pageRecordField page =
             ( camelCasePage page.routeName
-            , typed page.routeName []
+            , typed "Maybe"
+                [ typed (page.options.moduleName ++ ".Model") [] ]
             )
     in
     aliasDecl
@@ -145,23 +146,57 @@ enterRouteBody pages =
     let
         routeCase page =
             ( routePattern page
-            , tuple
-                [ update "model"
-                    [ ( "index"
-                      , val "model"
-                            |> flip access "index"
-                            |> flip pipe
-                                [ apply
-                                    [ fqVal [ "Maybe" ] "withDefault"
-                                    , unit
-                                    ]
-                                , construct "Just" []
-                                ]
-                      )
+            , if pageHasCmd page then
+                letExpr
+                    [ letDestructuring
+                        (tuplePattern
+                            [ varPattern "pageModel", varPattern "pageCmd" ]
+                        )
+                      <|
+                        val (page.options.moduleName ++ ".init")
                     ]
-                , apply
-                    [ fqVal [ "Cmd" ] "none" ]
-                ]
+                    (tuple
+                        [ update "model"
+                            [ ( camelCasePage page.routeName
+                              , pipe
+                                    (val "model" |> flip access (camelCasePage page.routeName))
+                                    [ apply
+                                        [ fqVal [ "Maybe" ] "withDefault"
+                                        , val "pageModel"
+                                        ]
+                                    , val "Just"
+                                    ]
+                              )
+                            ]
+                        , apply
+                            [ fqVal [ "Cmd" ] "map"
+                            , msgConstructor page
+                            , val "pageCmd"
+                            ]
+                        ]
+                    )
+
+              else
+                letExpr
+                    [ letVal "pageModel" <|
+                        val (page.options.moduleName ++ ".init")
+                    ]
+                    (tuple
+                        [ update "model"
+                            [ ( camelCasePage page.routeName
+                              , pipe
+                                    (val "model" |> flip access (camelCasePage page.routeName))
+                                    [ apply
+                                        [ fqVal [ "Maybe" ] "withDefault"
+                                        , val "pageModel"
+                                        ]
+                                    , val "Just"
+                                    ]
+                              )
+                            ]
+                        , fqVal [ "Cmd" ] "none"
+                        ]
+                    )
             )
 
         elseCase =
@@ -204,7 +239,7 @@ msgDecl pages_ =
 
         pageMsg page =
             ( pageName page.routeName ++ "Msg"
-            , [ typed (page.routeName ++ ".Msg") [] ]
+            , [ typed (page.options.moduleName ++ ".Msg") [] ]
             )
 
         defaultMsg =
@@ -252,7 +287,55 @@ updateBody pages_ =
 
         updatePageCase page =
             ( updatePagePattern page
-            , fqVal [ "Cmd" ] "none"
+            , if pageHasCmd page then
+                letExpr
+                    [ letDestructuring
+                        (tuplePattern
+                            [ varPattern "pageModel"
+                            , varPattern "pageCmd"
+                            ]
+                        )
+                      <|
+                        apply
+                            [ val "updateHelper2"
+                            , val (page.options.moduleName ++ ".update")
+                            , val "subMsg"
+                            , val "model" |> flip access (camelCasePage page.routeName)
+                            ]
+                    ]
+                    (tuple
+                        [ update "model"
+                            [ ( camelCasePage page.routeName
+                              , val "pageModel"
+                              )
+                            ]
+                        , apply
+                            [ fqVal [ "Cmd" ] "map"
+                            , msgConstructor page
+                            , val "pageCmd"
+                            ]
+                        ]
+                    )
+
+              else
+                letExpr
+                    [ letVal "pageModel" <|
+                        apply
+                            [ val "updateHelper1"
+                            , val (page.options.moduleName ++ ".update")
+                            , val "subMsg"
+                            , val "model" |> flip access (camelCasePage page.routeName)
+                            ]
+                    ]
+                    (tuple
+                        [ update "model"
+                            [ ( camelCasePage page.routeName
+                              , val "pageModel"
+                              )
+                            ]
+                        , fqVal [ "Cmd" ] "none"
+                        ]
+                    )
             )
     in
     if List.isEmpty pages then
@@ -306,11 +389,7 @@ viewBody pages =
                     (val "model" |> flip access (camelCasePage page.routeName))
                     [ apply
                         [ fqVal [ "Maybe" ] "map"
-                        , parens <|
-                            apply
-                                [ val "always"
-                                , fqVal (toModuleName page.options.moduleName) "view"
-                                ]
+                        , fqVal (toModuleName page.options.moduleName) "view"
                         ]
                     , apply
                         [ fqVal [ "Maybe" ] "map"
@@ -326,11 +405,7 @@ viewBody pages =
                         ]
                     , apply
                         [ val "mapDocument"
-                        , parens <|
-                            apply
-                                [ val "always"
-                                , parens <| msgConstructor page
-                                ]
+                        , msgConstructor page
                         ]
                     ]
 
@@ -448,7 +523,13 @@ importAppUtils =
     importStmt
         [ "App", "Utils" ]
         Nothing
-        (Just <| exposeExplicit [ funExpose "mapDocument" ])
+        (Just <|
+            exposeExplicit
+                [ funExpose "mapDocument"
+                , funExpose "updateHelper1"
+                , funExpose "updateHelper2"
+                ]
+        )
 
 
 importBrowser : Import
@@ -486,6 +567,13 @@ importPages pages =
 toModuleName : String -> ModuleName
 toModuleName =
     String.split "."
+
+
+pageHasCmd : AppPage -> Bool
+pageHasCmd page =
+    pageHasModel page
+        && page.options.initType
+        /= Init1
 
 
 pageHasModel : AppPage -> Bool
@@ -536,7 +624,7 @@ routePattern page =
 
 updatePagePattern : AppPage -> Pattern
 updatePagePattern page =
-    namedPattern (pageName page.routeName ++ "Msg") []
+    namedPattern (pageName page.routeName ++ "Msg") [ varPattern "subMsg" ]
 
 
 msgConstructor : AppPage -> Expression

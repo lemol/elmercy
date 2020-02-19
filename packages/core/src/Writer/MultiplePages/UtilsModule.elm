@@ -3,7 +3,7 @@ module Writer.MultiplePages.UtilsModule exposing (write)
 
 write : String
 write =
-    """module App.Utils exposing (mapDocument, dispatch)
+    """module App.Utils exposing (mapDocument, dispatch, updateHelper1, updateHelper2)
 
 import Browser exposing (Document)
 import Html
@@ -29,4 +29,24 @@ mapDocument f { title, body } =
     , body =
         List.map (Html.map f) body
     }
+
+
+
+-- UPDATE
+
+
+updateHelper1 : (msg -> model -> model) -> msg -> Maybe model -> Maybe model
+updateHelper1 f msg =
+    Maybe.map (f msg)
+
+
+updateHelper2 : (msg -> model -> ( model, Cmd msg )) -> msg -> Maybe model -> ( Maybe model, Cmd msg )
+updateHelper2 f msg maybeModel =
+    case maybeModel of
+        Nothing ->
+            ( Nothing, Cmd.none )
+
+        Just model ->
+            f msg model
+                |> Tuple.mapFirst Just
   """
