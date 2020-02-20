@@ -19,6 +19,7 @@ write config pages_ =
                 , openTypeExpose "Msg"
                 , funExpose "enterRoute"
                 , funExpose "init"
+                , funExpose "subscriptions"
                 , funExpose "update"
                 , funExpose "view"
                 ]
@@ -452,13 +453,13 @@ subscriptionsBody pages_ =
     let
         pages =
             pages_
-            |> List.filter pageHasSubscriptions
+                |> List.filter pageHasSubscriptions
 
         pageSubscription page =
             case page.options.subscriptionType of
                 Subscription1 ->
                     apply
-                        [ fqVal ["Sub"] "map"
+                        [ fqVal [ "Sub" ] "map"
                         , msgConstructor page
                         , val (page.options.moduleName ++ ".subscriptions")
                         ]
@@ -467,30 +468,30 @@ subscriptionsBody pages_ =
                     pipe
                         (val "model" |> flip access "counterAsync")
                         [ apply
-                            [ fqVal ["Maybe"] "map"
+                            [ fqVal [ "Maybe" ] "map"
                             , val (page.options.moduleName ++ ".subscriptions")
                             ]
                         , apply
-                            [ fqVal ["Maybe"] "map"
+                            [ fqVal [ "Maybe" ] "map"
                             , parens
                                 (apply
-                                    [ fqVal ["Sub"] "map"
+                                    [ fqVal [ "Sub" ] "map"
                                     , msgConstructor page
                                     ]
                                 )
                             ]
                         ]
-                
+
                 _ ->
                     string "<invalid subsription type>"
     in
     pipe
         (list (pages |> List.map pageSubscription))
         [ apply
-            [ fqVal ["List"] "filterMap"
+            [ fqVal [ "List" ] "filterMap"
             , val "identity"
             ]
-        , fqVal ["Sub"] "batch"
+        , fqVal [ "Sub" ] "batch"
         ]
 
 
@@ -502,6 +503,7 @@ subscriptionsDecl pages =
         "subscriptions"
         [ varPattern "model" ]
         (subscriptionsBody pages)
+
 
 
 -- VIEWEMPTY DECL

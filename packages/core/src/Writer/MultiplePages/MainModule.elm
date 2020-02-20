@@ -382,7 +382,18 @@ subscriptionsBody : Expression
 subscriptionsBody =
     apply
         [ fqVal [ "Sub" ] "batch"
-        , list []
+        , list
+            [ apply
+                [ fqVal [ "Sub" ] "map"
+                , val "PageMsg"
+                , parens
+                    (apply
+                        [ fqVal [ "Page" ] "subscriptions"
+                        , val "model" |> flip access "page"
+                        ]
+                    )
+                ]
+            ]
         ]
 
 
@@ -392,7 +403,7 @@ subscriptionsDecl =
         Nothing
         (Just subscriptionsAnn)
         "subscriptions"
-        [ allPattern ]
+        [ varPattern "model" ]
         subscriptionsBody
 
 
