@@ -7,7 +7,7 @@ const version = require("../../package.json")["version"];
 const cli = meow(
   `
 	Usage
-	  $ elm-framework [project path] [options]
+	  $ elmercy [project path] [options]
 
 	Options
     --version, -v                       show the version
@@ -15,7 +15,7 @@ const cli = meow(
     --watch, w                          watch for files change
 
 	Examples
-	  $ elm-framework --version
+	  $ elmercy --version
 	  ${version}
 `,
   {

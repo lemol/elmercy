@@ -2114,7 +2114,7 @@ elliptic@^6.0.0:
     minimalistic-assert "^1.0.0"
     minimalistic-crypto-utils "^1.0.0"
 
-"elm-framework@file:../core":
+"elmercy@file:../core":
   version "0.0.1"
   dependencies:
     chalk "^3.0.0"

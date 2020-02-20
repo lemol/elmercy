@@ -1,12 +1,12 @@
 {
-  "name": "parcel-plugin-elm-framework",
+  "name": "parcel-plugin-elmercy",
   "version": "0.0.1",
-  "description": "Parcel plugin for elm-framework",
+  "description": "Parcel plugin for elmercy",
   "main": "src/index.js",
   "author": "lemol",
   "license": "MIT",
   "dependencies": {
-    "elm-framework": "file:../core",
+    "elmercy": "file:../core",
     "parcel-bundler": "^1.12.4"
   }
 }
