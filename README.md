@@ -1,3 +1,3 @@
 # elmercy
 
-A Framework for Elm.
+> a framework for Elm
