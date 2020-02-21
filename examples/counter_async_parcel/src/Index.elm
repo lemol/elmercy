@@ -63,6 +63,6 @@ view model =
         , button
             [ onClick Reset
             ]
-            [ text "reset"
+            [ text "reset2 again outer"
             ]
         ]

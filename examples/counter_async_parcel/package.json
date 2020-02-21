@@ -12,6 +12,6 @@
     "parcel-bundler": "^1.12.4"
   },
   "dependencies": {
-    "parcel-plugin-elmercy": "file:../../packages/parcel-plugin-elmercy"
+    "parcel-plugin-elmercy": "../../packages/parcel-plugin-elmercy"
   }
 }
