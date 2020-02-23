@@ -1,5 +1,5 @@
 *
-!/bin
+!/bin/**
 !/package.json
-!/src/Main
-!/src/Native
+!/src/Main/**
+!/src/Native/**
