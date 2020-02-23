@@ -1,6 +1,6 @@
 module App.Main exposing (main)
 
-import App.Data as App
+import App.Data as Data
 import App.Page as Page
 import App.Routes exposing (parseUrl)
 import App.Utils exposing (mapDocument)
@@ -8,10 +8,6 @@ import Browser
 import Browser.Navigation as Navigation
 import Url
 import Url.Parser exposing (map)
-
-
-
--- PROGRAM
 
 
 main : Program Flags Model Msg
@@ -26,26 +22,12 @@ main =
         }
 
 
-
--- DATA
-
-
 type alias Flags =
     ()
 
 
-
--- MODEL
-
-
 type alias Model =
-    { app : App.Model
-    , page : Page.Model
-    }
-
-
-
--- MESSAGES
+    { app : Data.Model, page : Page.Model }
 
 
 type Msg
@@ -60,26 +42,16 @@ init _ url key =
         route =
             parseUrl url
 
-        app =
-            App.init key route
+        appModel =
+            Data.init key route
 
         ( pageModel, pageCmd ) =
             Page.init route
 
         model =
-            { app = app
-            , page = pageModel
-            }
+            { app = appModel, page = pageModel }
     in
-    ( model
-    , Cmd.batch
-        [ Cmd.map PageMsg pageCmd
-        ]
-    )
-
-
-
--- UPDATE
+    ( model, Cmd.batch [ Cmd.map PageMsg pageCmd ] )
 
 
 update : Msg -> Model -> ( Model, Cmd Msg )
@@ -88,14 +60,10 @@ update msg model =
         LinkClicked urlRequest ->
             case urlRequest of
                 Browser.Internal url ->
-                    ( model
-                    , Navigation.pushUrl model.app.navigationKey (Url.toString url)
-                    )
+                    ( model, Navigation.pushUrl model.app.navigationKey (Url.toString url) )
 
                 Browser.External href ->
-                    ( model
-                    , Navigation.load href
-                    )
+                    ( model, Navigation.load href )
 
         UrlChanged url ->
             let
@@ -111,44 +79,21 @@ update msg model =
                 ( newPage, newPageCmd ) =
                     Page.enterRoute model.page route
             in
-            ( { model
-                | page = newPage
-                , app = newApp
-              }
-            , Cmd.batch
-                [ Cmd.map PageMsg newPageCmd
-                ]
-            )
+            ( { model | page = newPage, app = newApp }, Cmd.batch [ Cmd.map PageMsg newPageCmd ] )
 
         PageMsg subMsg ->
             let
                 ( newPage, newPageCmd ) =
                     Page.update subMsg model.page
             in
-            ( { model | page = newPage }
-            , Cmd.batch
-                [ Cmd.map PageMsg newPageCmd
-                ]
-            )
-
-
-
--- SUBSCRIPTION
+            ( { model | page = newPage }, Cmd.batch [ Cmd.map PageMsg newPageCmd ] )
 
 
 subscriptions : Model -> Sub Msg
 subscriptions model =
-    Sub.batch
-        [ Page.subscriptions model.page
-            |> Sub.map PageMsg
-        ]
-
-
-
--- VIEW
+    Sub.batch [ Sub.map PageMsg (Page.subscriptions model.page) ]
 
 
 view : Model -> Browser.Document Msg
 view model =
-    Page.view model.app.route model.page
-        |> mapDocument PageMsg
+    Page.view model.app.route model.page |> mapDocument PageMsg

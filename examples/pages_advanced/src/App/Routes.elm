@@ -4,22 +4,17 @@ import Url exposing (Url)
 import Url.Parser exposing (Parser, map, oneOf, parse, s, top)
 
 
-
--- DATA
-
-
 type Route
-    = Index
-    | About
+    = About
     | Counter
     | CounterAsync
+    | Index
     | NotFound
 
 
 parseUrl : Url -> Route
 parseUrl url =
     let
-        -- for HashRouting { url | path = url.fragment |> Maybe.withDefault "" }
         newUrl =
             { url | path = url.fragment |> Maybe.withDefault "" }
     in
@@ -34,26 +29,25 @@ parseUrl url =
 toPath : Route -> String
 toPath route =
     let
-        -- for HashRouting #
         prefix =
             "#"
 
         path =
             case route of
-                NotFound ->
-                    "/404"
+                About ->
+                    "about"
+
+                Counter ->
+                    "counter"
+
+                CounterAsync ->
+                    "counterasync"
 
                 Index ->
                     "/"
 
-                About ->
-                    "/about"
-
-                Counter ->
-                    "/counter"
-
-                CounterAsync ->
-                    "/counter-async"
+                NotFound ->
+                    "/404"
     in
     prefix ++ path
 
@@ -61,8 +55,9 @@ toPath route =
 matchRoute : Parser (Route -> a) a
 matchRoute =
     oneOf
-        [ map Index top
-        , map About (s "about")
+        [ map About (s "about")
         , map Counter (s "counter")
-        , map CounterAsync (s "counter-async")
+        , map CounterAsync (s "counterasync")
+        , map Index top
+        , map NotFound (s "/404")
         ]
