@@ -1,6 +1,6 @@
 {
   "name": "elmercy",
-  "version": "0.0.1",
+  "version": "0.0.2",
   "license": "MIT",
   "scripts": {
     "build:elm": "elm make src/Main.elm --optimize --output=src/Main/index.js",
