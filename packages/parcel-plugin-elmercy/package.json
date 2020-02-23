@@ -6,7 +6,9 @@
   "author": "lemol",
   "license": "MIT",
   "dependencies": {
-    "elmercy": "../core",
+    "elmercy": "^0.0.3"
+  },
+  "peerDependencies": {
     "parcel-bundler": "^1.12.4"
   }
 }
