@@ -1,6 +1,7 @@
 {
-  "name": "elmercy",
-  "version": "0.0.3",
+  "name": "elmercy-boot",
+  "version": "0.0.1",
+  "author": "lemol",
   "license": "MIT",
   "scripts": {
     "build:elm": "elm make src/Main.elm --optimize --output=src/Main/index.js",
@@ -21,13 +22,7 @@
     "typescript": "^3.7.5"
   },
   "dependencies": {
-    "chalk": "^3.0.0",
-    "chokidar": "^3.3.1",
-    "glob": "^7.1.6",
-    "meow": "^6.0.0"
+    "glob": "^7.1.6"
   },
-  "main": "src/Native/index.js",
-  "bin": {
-    "elmercy": "bin/elmercy"
-  }
+  "main": "src/Native/index.js"
 }

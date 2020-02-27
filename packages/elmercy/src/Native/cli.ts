@@ -1,6 +1,6 @@
 import * as path from "path";
 import meow from "meow";
-import { buildApp } from "./";
+import { buildApp } from ".";
 
 const version = require("../../package.json")["version"];
 
@@ -8,6 +8,10 @@ const cli = meow(
   `
 	Usage
 	  $ elmercy [project path] [options]
+
+  Commands:
+    init
+    build
 
 	Options
     --version, -v                       show the version
@@ -36,10 +40,10 @@ const cli = meow(
   }
 );
 
-const watch = cli.flags.watch;
+const watch = cli.flags.watch as boolean;
 const projectPath = path.relative(process.cwd(), cli.input[0] || ".");
 const outputDir =
   cli.flags["output-dir"] &&
-  path.relative(process.cwd(), cli.flags["output-dir"]);
+  path.relative(process.cwd(), cli.flags["output-dir"] as string);
 
 buildApp({ projectPath, outputDir, watch });
